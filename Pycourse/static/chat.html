@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Чат — Pycourse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+  .chat-page{max-width:760px;margin:0 auto;padding:30px 24px;}
+  .chat-page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .typing-dots{display:inline-flex;gap:3px;padding:11px 15px;background:var(--ink-800);border-radius:14px;border-bottom-left-radius:4px;align-self:flex-start;}
+  .typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--text-500);animation:blink 1.2s infinite ease-in-out;}
+  .typing-dots span:nth-child(2){animation-delay:.2s;}
+  .typing-dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,80%,100%{opacity:.3;}40%{opacity:1;}}
+</style>
+</head>
+<body>
+
+<div class="chat-page">
+  <div class="chat-page-head">
+    <div>
+      <h1 style="font-family:var(--font-mono);font-size:22px;margin:0 0 4px;">Чат</h1>
+      <p class="page-sub" style="margin:0;">Обсуждай уроки с учителем или спрашивай ИИ-помощника.</p>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="backBtn">← Кабинет</button>
+  </div>
+
+  <div class="chat-tabs">
+    <button class="active" data-tab="teacher">👩‍🏫 Учитель</button>
+    <button data-tab="ai">🤖 ИИ-помощник</button>
+  </div>
+
+  <div class="chat-shell" style="height:65vh;">
+    <div class="chat-log" id="chatLog"></div>
+    <form class="chat-input-row" id="chatForm">
+      <input type="text" id="chatInput" placeholder="Напиши сообщение..." autocomplete="off">
+      <button class="btn btn-primary" type="submit">Отправить</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="api.js"></script>
+<script>
+(function(){
+  var activeTab = 'teacher';
+
+  function toast(msg){
+    var c = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3700);
+  }
+  function fail(err){ toast(err.message || 'Ошибка запроса к серверу'); }
+
+  PycourseAPI.me().then(function(user){
+    if(!user){ window.location.href = 'index.html'; return; }
+    if(user.role === 'admin'){
+      // у учителя чат со всеми учениками ведётся в admin.html
+      window.location.href = 'admin.html';
+      return;
+    }
+    initPage();
+  }).catch(function(){ window.location.href = 'index.html'; });
+
+  function initPage(){
+    document.getElementById('backBtn').addEventListener('click', function(){
+      window.location.href = 'pupil.html';
+    });
+
+    var tabs = document.querySelectorAll('.chat-tabs button');
+    tabs.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        tabs.forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        activeTab = btn.getAttribute('data-tab');
+        renderLog();
+      });
+    });
+
+    function escapeHtml(s){
+      return s.replace(/[&<>"']/g, function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+      });
+    }
+
+    function renderLog(){
+      var log = document.getElementById('chatLog');
+      PycourseAPI.getChat(activeTab).then(function(msgs){
+        if(!msgs.length){
+          log.innerHTML = '<div class="chat-empty">'+
+            (activeTab==='teacher'
+              ? 'Напиши учителю свой вопрос по уроку — он ответит в своём кабинете.'
+              : 'Спроси ИИ-помощника что-нибудь по уроку. Пока это демо-режим без настоящего ИИ на сервере.')+
+            '</div>';
+          return;
+        }
+        log.innerHTML = msgs.map(function(m){
+          var mine = m.sender === 'pupil';
+          var name = mine ? 'Ты' : (activeTab === 'ai' ? 'ИИ-помощник' : 'Учитель');
+          return '<div class="msg '+(mine?'me':'them')+'">'+escapeHtml(m.text)+'<span class="meta">'+name+' · '+new Date(m.time).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</span></div>';
+        }).join('');
+        log.scrollTop = log.scrollHeight;
+      }).catch(fail);
+    }
+
+    document.getElementById('chatForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var input = document.getElementById('chatInput');
+      var text = input.value.trim();
+      if(!text) return;
+      input.value = '';
+      renderLog();
+
+      var log = document.getElementById('chatLog');
+      var typing = null;
+      if(activeTab === 'ai'){
+        typing = document.createElement('div');
+        typing.className = 'typing-dots';
+        typing.innerHTML = '<span></span><span></span><span></span>';
+      }
+
+      PycourseAPI.sendChat(activeTab, text).then(function(){
+        if(typing){
+          log.appendChild(typing);
+          log.scrollTop = log.scrollHeight;
+          setTimeout(function(){
+            typing.remove();
+            renderLog();
+          }, 500 + Math.random()*500);
+        } else {
+          renderLog();
+        }
+      }).catch(fail);
+    });
+
+    renderLog();
+  }
+})();
+</script>
+</body>
+</html>

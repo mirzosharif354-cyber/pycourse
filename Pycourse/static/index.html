@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="green">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pycourse — онлайн-школа программирования</title>
+<meta name="description" content="Pycourse — платформа, где ты с нуля осваиваешь программирование: Python, HTML/CSS, frontend, Flask и компьютерную грамотность.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-950:#0a120e;
+    --ink-900:#0f1a14;
+    --ink-850:#13201a;
+    --ink-800:#182a22;
+    --ink-700:#22392e;
+    --line:#25392f;
+    --text-100:#eef5f0;
+    --text-300:#c3d3c9;
+    --text-500:#88a094;
+    --text-600:#66806f;
+    --gold-400:#eab454;
+    --gold-300:#f3cd82;
+    --mint-400:#34d399;
+    --mint-300:#6ee7b7;
+    --coral-400:#e8735f;
+    --on-primary:#0a120e;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:8px;
+    --font-mono:'JetBrains Mono', ui-monospace, monospace;
+    --font-body:'Manrope', system-ui, sans-serif;
+    --container:1180px;
+  }
+
+  html[data-theme="white"]{
+    --ink-950:#ffffff;
+    --ink-900:#f6f9f7;
+    --ink-850:#ffffff;
+    --ink-800:#eef3ef;
+    --ink-700:#e0eae3;
+    --line:#dbe6df;
+    --text-100:#0f1e17;
+    --text-300:#3c4e45;
+    --text-500:#5e7268;
+    --text-600:#83958b;
+    --gold-400:#c2670a;
+    --gold-300:#a6560a;
+    --mint-400:#0f9d58;
+    --mint-300:#0b7d45;
+    --coral-400:#c0392b;
+    --on-primary:#ffffff;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink-950);
+    color:var(--text-100);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    transition:background .3s ease, color .3s ease;
+  }
+  img{max-width:100%;display:block;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;margin:0;padding:0;}
+  button{font-family:inherit;cursor:pointer;}
+  .container{max-width:var(--container);margin:0 auto;padding:0 24px;}
+  ::selection{background:var(--gold-400);color:var(--on-primary);}
+
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(234,180,84,.08), transparent 40%),
+      radial-gradient(circle at 85% 15%, rgba(52,211,153,.07), transparent 45%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible{
+    outline:2px solid var(--mint-400);
+    outline-offset:3px;
+    border-radius:4px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important;}
+  }
+
+  /* scroll progress */
+  .scroll-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:300;background:transparent;}
+  .scroll-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--mint-400),var(--gold-400));transition:width .08s linear;}
+
+  /* back to top */
+  .back-to-top{
+    position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;
+    background:var(--mint-400);color:var(--on-primary);border:none;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 26px -8px rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;transform:translateY(12px) scale(.9);
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:90;
+  }
+  .back-to-top.show{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+  .back-to-top:hover{transform:translateY(-3px) scale(1.03);}
+
+  /* toasts */
+  .toast-container{position:fixed;bottom:24px;left:24px;z-index:1200;display:flex;flex-direction:column-reverse;gap:10px;max-width:320px;}
+  .toast{
+    background:var(--ink-850);border:1px solid var(--line);border-left:3px solid var(--mint-400);
+    border-radius:10px;padding:14px 16px;font-size:13.5px;color:var(--text-100);
+    box-shadow:0 14px 34px -12px rgba(0,0,0,.5);
+    animation:toastIn .3s ease, toastOut .3s ease 3.3s forwards;
+  }
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(-6px);}}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    letter-spacing:.06em;
+    color:var(--mint-400);
+    text-transform:uppercase;
+    margin-bottom:16px;
+  }
+  .eyebrow::before{content:"//";color:var(--text-600);}
+  .section{padding:96px 0;position:relative;z-index:1;}
+  .section-head{max-width:640px;margin-bottom:44px;}
+  .section-head h2{
+    font-family:var(--font-mono);
+    font-size:clamp(28px,4vw,40px);
+    font-weight:700;
+    margin:0 0 14px;
+    letter-spacing:-.01em;
+    color:var(--text-100);
+  }
+  .section-head p{color:var(--text-500);font-size:17px;margin:0;}
+  .accent{color:var(--gold-400);}
+  .accent-mint{color:var(--mint-400);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 26px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:15px;
+    border:1.5px solid transparent;
+    transition:transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{background:var(--mint-400);color:var(--on-primary);}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(52,211,153,.5);}
+  .btn-ghost{background:transparent;border-color:var(--line);color:var(--text-100);}
+  .btn-ghost:hover{border-color:var(--text-500);transform:translateY(-2px);}
+  .btn-gold{background:var(--gold-400);color:var(--on-primary);}
+  .btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 24px -8px rgba(234,180,84,.5);}
+  .btn-sm{padding:10px 18px;font-size:13.5px;border-radius:8px;}
+  .btn-block{width:100%;}
+  .btn:active{transform:scale(.97);}
+
+  header{
+    position:sticky;top:0;z-index:100;
+    background:rgba(12,14,20,.78);
+    backdrop-filter:blur(14px) saturate(1.4);
+    border-bottom:1px solid var(--line);
+    transition:background .3s ease;
+  }
+  html[data-theme="white"] header{background:rgba(255,255,255,.82);}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:var(--container);margin:0 auto;gap:16px;}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--font-mono);font-weight:800;font-size:19px;color:var(--text-100);letter-spacing:-.01em;flex-shrink:0;}
+  .logo .brk{color:var(--mint-400);}
+  .logo .brk2{color:var(--gold-400);}
+  .nav-links{display:flex;align-items:center;gap:26px;}
+  .nav-links a{font-size:14px;font-weight:600;color:var(--text-300);position:relative;padding:4px 0;transition:color .15s ease;white-space:nowrap;}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:-2px;width:0;height:2px;background:var(--gold-400);transition:width .2s ease;}
+  .nav-links a:hover{color:var(--text-100);}
+  .nav-links a:hover::after{width:100%;}
+  .nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+
+  .form-error{color:var(--coral-400);font-size:13px;margin:-6px 0 10px;min-height:0;}
+  .form-error:empty{display:none;}
+  .hidden{display:none !important;}
+  .modal-note code{background:var(--ink-800);padding:1px 5px;border-radius:5px;font-family:var(--font-mono);font-size:12px;}
+
+  .lang-switch{display:flex;background:var(--ink-800);border:1px solid var(--line);border-radius:20px;padding:3px;gap:2px;}
+  .lang-switch button{padding:6px 11px;border-radius:16px;border:none;background:transparent;color:var(--text-500);font-family:var(--font-mono);font-size:12px;font-weight:700;transition:background .2s ease, color .2s ease;}
+  .lang-switch button.active{background:var(--mint-400);color:var(--on-primary);}
+
+  .theme-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--ink-800);display:flex;align-items:center;justify-content:center;color:var(--text-300);transition:border-color .2s ease, transform .4s ease;flex-shrink:0;}
+  .theme-btn:hover{border-color:var(--mint-400);transform:rotate(20deg);}
+
+  .burger{display:none;flex-direction:column;gap:5px;background:none;border:none;padding:8px;}
+  .burger span{width:22px;height:2px;background:var(--text-100);border-radius:2px;transition:transform .25s ease, opacity .25s ease;}
+  .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .burger.open span:nth-child(2){opacity:0;}
+  .burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  .mobile-menu{display:flex;flex-direction:column;gap:2px;padding:0 24px;max-height:0;overflow:hidden;border-bottom:0 solid var(--line);background:var(--ink-900);transition:max-height .35s ease, padding .35s ease;}
+  .mobile-menu.open{max-height:560px;padding:8px 24px 20px;border-bottom:1px solid var(--line);}
+  .mobile-menu a{padding:13px 4px;font-weight:600;color:var(--text-300);border-bottom:1px solid var(--ink-800);font-size:15px;}
+  .mobile-menu .mm-controls{display:flex;gap:10px;align-items:center;margin-top:14px;}
+  .mobile-menu .btn{margin-top:12px;}
+
+  .hero{padding:80px 0 64px;position:relative;z-index:1;overflow:hidden;}
+  .hero-blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.28;z-index:0;pointer-events:none;}
+  .hero-blob.b1{width:360px;height:360px;background:var(--mint-400);top:-100px;left:-110px;animation:floatBlob 13s ease-in-out infinite;}
+  .hero-blob.b2{width:300px;height:300px;background:var(--gold-400);bottom:-90px;right:-70px;animation:floatBlob 16s ease-in-out infinite reverse;}
+  @keyframes floatBlob{0%,100%{transform:translate(0,0);}50%{transform:translate(34px,-24px);}}
+  .hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:56px;align-items:center;position:relative;z-index:1;}
+  .hero h1{font-family:var(--font-mono);font-size:clamp(32px,4.6vw,50px);line-height:1.14;font-weight:800;letter-spacing:-.015em;margin:0 0 22px;}
+  .hero h1 .hl{color:var(--gold-400);}
+  .hero-sub{font-size:18px;color:var(--text-500);max-width:520px;margin:0 0 34px;}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:32px;}
+  .hero-meta{display:flex;gap:24px;flex-wrap:wrap;font-family:var(--font-mono);font-size:13px;color:var(--text-600);}
+  .hero-meta b{color:var(--text-300);font-weight:700;}
+
+  .terminal{background:#12161c;border:1px solid #262b34;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 30px 70px -30px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02);}
+  .terminal-bar{display:flex;align-items:center;gap:8px;padding:13px 16px;background:#181d25;border-bottom:1px solid #262b34;}
+  .terminal-dot{width:11px;height:11px;border-radius:50%;}
+  .terminal-dot.r{background:#e8735f;}
+  .terminal-dot.y{background:#eab454;}
+  .terminal-dot.g{background:#5fe3b3;}
+  .terminal-title{margin-left:8px;font-family:var(--font-mono);font-size:12.5px;color:#767c8a;}
+  .terminal-body{padding:24px 22px 30px;font-family:var(--font-mono);font-size:14.5px;line-height:1.9;min-height:280px;}
+  .terminal-line{color:#8b90a0;}
+  .terminal-line .kw{color:#e8735f;}
+  .terminal-line .fn{color:#5fe3b3;}
+  .terminal-line .str{color:#eecd82;}
+  .terminal-line .cm{color:#5c6274;}
+  .terminal-prompt{color:#5fe3b3;}
+  #typedOut{white-space:pre-wrap;color:#c7cbd8;}
+  .cursor{display:inline-block;width:8px;height:16px;background:#eab454;vertical-align:middle;margin-left:2px;animation:blink 1s step-end infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* process section */
+  .process-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  .process-step{background:var(--ink-850);border:1px solid var(--line);border-radius:var(--radius-md);padding:26px 22px;transition:transform .2s ease, border-color .2s ease;}
+  .process-step:hover{transform:translateY(-4px);border-color:var(--mint-400);}
+  .process-num{font-family:var(--font-mono);font-size:13px;color:var(--mint-400);font-weight:700;margin-bottom:14px;}
+  .process-step h4{font-family:var(--font-mono);font-size:16.5px;margin:0 0 8px;color:var(--text-100);}
+  .process-step p{color:var(--text-500);font-size:13.5px;margin:0;}
+
+  .intro{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center;}
+  .intro-text h2{font-family:var(--font-mono);font-size:clamp(26px,3.4vw,34px);margin:0 0 16px;}
+  .intro-text p{color:var(--text-500);font-size:16px;margin:0 0 14px;}
+  .intro-stats{display:flex;gap:28px;margin-top:28px;flex-wrap:wrap;}
+  .stat b{display:block;font-family:var(--font-mono);font-size:26px;color:var(--gold-400);font-weight:800;}
+  .stat span{font-size:12.5px;color:var(--text-600);text-transform:uppercase;letter-spacing:.05em;}
+
+  .video-wrap{position:relative;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--line);background:linear-gradient(135deg,var(--ink-800),var(--ink-900));aspect-ratio:16/9;}
+  .video-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+  .video-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%, rgba(52,211,153,.14), transparent 50%),radial-gradient(circle at 80% 80%, rgba(234,180,84,.10), transparent 50%);cursor:pointer;transition:opacity .3s ease;}
+  .video-overlay.hidden{opacity:0;pointer-events:none;}
+  .play-btn{width:74px;height:74px;border-radius:50%;background:var(--gold-400);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 12px rgba(234,180,84,.12);transition:transform .2s ease;color:var(--on-primary);}
+  .video-overlay:hover .play-btn{transform:scale(1.08);}
+  .play-btn svg{margin-left:4px;}
+  .video-caption{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-500);background:linear-gradient(0deg, rgba(0,0,0,.55), transparent);}
+  html[data-theme="white"] .video-caption{color:#eef3ef;}
+
+  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px;}
+  .filter-btn{padding:9px 18px;border-radius:20px;border:1px solid var(--line);background:var(--ink-850);color:var(--text-500);font-size:13.5px;font-weight:700;font-family:var(--font-mono);transition:all .18s ease;}
+  .filter-btn.active{background:var(--mint-400);color:var(--on-primary);border-color:var(--mint-400);}
+  .filter-btn:hover:not(.active){border-color:var(--mint-400);color:var(--text-100);}
+
+  .course-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(300px,1fr));gap:22px;}
+  .course-card{background:var(--ink-850);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform .25s ease, border-color .25s ease, box-shadow .25s ease;}
+  .course-card:hover{transform:translateY(-6px);border-color:var(--gold-400);box-shadow:0 22px 44px -20px rgba(0,0,0,.4);}
+  .file-tab{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;background:var(--ink-800);border-bottom:1px solid var(--line);font-family:var(--font-mono);font-size:12.5px;color:var(--text-600);}
+  .file-tab .ext{color:var(--mint-400);font-weight:700;}
+  .card-top{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0;}
+  .course-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--ink-800);border:1px solid var(--line);flex-shrink:0;transition:transform .3s ease;}
+  .course-card:hover .course-icon{transform:scale(1.08) rotate(-4deg);}
+  .badges{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+  .level-badge{font-family:var(--font-mono);font-size:11px;padding:4px 10px;border-radius:12px;background:var(--ink-800);border:1px solid var(--line);color:var(--text-500);white-space:nowrap;}
+  .rating{display:flex;align-items:center;gap:4px;font-family:var(--font-mono);font-size:12px;color:var(--gold-400);font-weight:700;}
+  .rating svg{width:12px;height:12px;}
+
+  .course-body{padding:14px 20px 22px;flex:1;display:flex;flex-direction:column;}
+  .course-body h3{font-family:var(--font-mono);font-size:19px;margin:2px 0 10px;color:var(--text-100);}
+  .course-body p.desc{color:var(--text-500);font-size:14.5px;margin:0 0 16px;}
+
+  .module-list{display:flex;flex-direction:column;gap:7px;margin:0 0 16px;}
+  .module-list li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-500);}
+  .module-list svg{flex-shrink:0;margin-top:2px;color:var(--mint-400);}
+
+  .course-meta{display:flex;flex-direction:column;gap:7px;font-size:13.5px;color:var(--text-500);border-top:1px dashed var(--line);padding-top:14px;margin-bottom:16px;}
+  .course-meta .row{display:flex;justify-content:space-between;gap:10px;}
+  .course-meta .row b{color:var(--text-300);font-weight:700;}
+  .price-tag{font-family:var(--font-mono);color:var(--gold-400) !important;font-weight:700;}
+  .card-actions{display:flex;gap:10px;margin-top:auto;}
+  .card-actions .btn{flex:1;}
+
+  /* format section */
+  .format-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .format-card{background:var(--ink-850);border:1px solid var(--line);border-radius:var(--radius-lg);padding:32px;position:relative;overflow:hidden;transition:transform .2s ease, border-color .2s ease;}
+  .format-card:hover{transform:translateY(-4px);}
+  .format-card.featured{border-color:var(--mint-400);}
+  .format-badge{position:absolute;top:22px;right:22px;font-family:var(--font-mono);font-size:11px;padding:5px 12px;border-radius:12px;background:var(--mint-400);color:var(--on-primary);font-weight:700;}
+  .format-card h3{font-family:var(--font-mono);font-size:21px;margin:0 0 18px;padding-right:90px;}
+  .format-features{display:flex;flex-direction:column;gap:11px;margin-bottom:0;}
+  .format-features li{display:flex;gap:9px;align-items:flex-start;font-size:14px;color:var(--text-300);}
+  .format-features svg{flex-shrink:0;margin-top:3px;color:var(--mint-400);}
+
+  .test-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;}
+  .test-card{background:var(--ink-850);border:1px solid var(--line);border-radius:var(--radius-md);padding:26px 24px;position:relative;transition:transform .2s ease;}
+  .test-card:hover{transform:translateY(-4px);}
+  .test-card .quote-mark{font-family:var(--font-mono);font-size:34px;color:var(--gold-400);opacity:.6;line-height:1;margin-bottom:6px;}
+  .test-card p{color:var(--text-300);font-size:15px;margin:0 0 22px;}
+  .test-person{display:flex;align-items:center;gap:12px;}
+  .avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:14px;color:var(--on-primary);flex-shrink:0;}
+  .test-person .who b{display:block;font-size:14px;color:var(--text-100);}
+  .test-person .who span{font-size:12.5px;color:var(--text-600);}
+
+  .teacher{display:grid;grid-template-columns:.6fr 1.4fr;gap:48px;align-items:center;background:var(--ink-850);border:1px solid var(--line);border-radius:var(--radius-lg);padding:44px;}
+  .teacher-avatar{width:100%;aspect-ratio:1;border-radius:16px;background:linear-gradient(160deg,var(--ink-800),var(--ink-700));border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+  .teacher-avatar .initials{font-family:var(--font-mono);font-size:56px;font-weight:800;color:var(--gold-400);z-index:1;}
+  .teacher-avatar::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 30% 20%, rgba(52,211,153,.18), transparent 55%);}
+  .teacher-info .role{font-family:var(--font-mono);color:var(--mint-400);font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;display:block;}
+  .teacher-info h3{font-family:var(--font-mono);font-size:26px;margin:0 0 14px;}
+  .teacher-info p{color:var(--text-500);font-size:15.5px;margin:0 0 20px;}
+  .teacher-tags{display:flex;gap:10px;flex-wrap:wrap;}
+  .tag{font-family:var(--font-mono);font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--line);color:var(--text-500);}
+
+  .faq-list{max-width:760px;}
+  .faq-item{border-bottom:1px solid var(--line);}
+  .faq-q{display:flex;align-items:center;justify-content:space-between;padding:20px 4px;cursor:pointer;font-weight:700;font-size:15.5px;color:var(--text-100);gap:16px;}
+  .faq-q .plus{font-family:var(--font-mono);color:var(--gold-400);font-size:20px;transition:transform .25s ease;flex-shrink:0;}
+  .faq-item.open .plus{transform:rotate(45deg);}
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .faq-a p{color:var(--text-500);font-size:14.5px;padding:0 4px 20px;margin:0;max-width:640px;}
+
+  .cta-strip{background:linear-gradient(120deg, var(--ink-850), var(--ink-800));border:1px solid var(--line);border-radius:var(--radius-lg);padding:52px 44px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+  .cta-strip h3{font-family:var(--font-mono);font-size:24px;margin:0 0 8px;}
+  .cta-strip p{color:var(--text-500);margin:0;font-size:15px;}
+  .cta-strip-actions{display:flex;gap:12px;flex-wrap:wrap;}
+
+  footer{border-top:1px solid var(--line);padding:52px 0 30px;position:relative;z-index:1;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px;}
+  .footer-brand p{color:var(--text-600);font-size:14px;max-width:280px;margin-top:12px;}
+  footer h4{font-family:var(--font-mono);font-size:13px;color:var(--text-500);text-transform:uppercase;letter-spacing:.05em;margin:0 0 16px;}
+  footer .flinks{display:flex;flex-direction:column;gap:10px;}
+  footer .flinks a{font-size:14.5px;color:var(--text-500);transition:color .15s ease;}
+  footer .flinks a:hover{color:var(--gold-400);}
+  .footer-bottom{border-top:1px solid var(--line);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--text-600);font-family:var(--font-mono);}
+
+  .modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(8,9,13,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s ease;}
+  .modal-overlay.open{opacity:1;pointer-events:auto;}
+  .modal{background:var(--ink-850);border:1px solid var(--line);border-radius:var(--radius-lg);padding:36px;width:100%;max-width:420px;transform:translateY(14px);transition:transform .25s ease;max-height:88vh;overflow-y:auto;}
+  .modal.modal-lg{max-width:560px;}
+  .modal-overlay.open .modal{transform:translateY(0);}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:16px;}
+  .modal-head h3{font-family:var(--font-mono);font-size:19px;margin:0;}
+  .modal-close{background:none;border:none;color:var(--text-500);font-size:22px;line-height:1;padding:4px;flex-shrink:0;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;color:var(--text-500);margin-bottom:7px;font-family:var(--font-mono);}
+  .field input, .field select{width:100%;padding:12px 14px;background:var(--ink-900);border:1px solid var(--line);border-radius:8px;color:var(--text-100);font-family:var(--font-body);font-size:14.5px;}
+  .field input:focus, .field select:focus{outline:2px solid var(--mint-400);outline-offset:1px;border-color:transparent;}
+  .modal-note{font-size:12.5px;color:var(--text-600);margin-top:14px;text-align:center;}
+
+  .cm-meta{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0 18px;font-family:var(--font-mono);font-size:12.5px;}
+  .cm-pill{padding:5px 11px;border-radius:12px;background:var(--ink-800);border:1px solid var(--line);color:var(--text-500);}
+  .cm-desc{color:var(--text-500);font-size:14.5px;margin:0 0 20px;}
+  .cm-section-title{font-family:var(--font-mono);font-size:13px;color:var(--mint-400);text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px;}
+  .cm-list{display:flex;flex-direction:column;gap:9px;margin:0 0 22px;}
+  .cm-list li{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:var(--text-300);}
+  .cm-list svg{flex-shrink:0;margin-top:3px;color:var(--mint-400);}
+  .cm-list.req svg{color:var(--gold-400);}
+  .cm-price-row{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px dashed var(--line);gap:16px;flex-wrap:wrap;}
+  .cm-price-row .price{font-family:var(--font-mono);font-size:20px;color:var(--gold-400);font-weight:800;}
+
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+  .stagger.in{transition-delay:calc(var(--d, 0) * 70ms);}
+
+  @media (max-width:960px){
+    .hero-grid{grid-template-columns:1fr;}
+    .intro{grid-template-columns:1fr;}
+    .intro-text{order:1;}
+    .video-wrap{order:2;}
+    .teacher{grid-template-columns:1fr;padding:32px;}
+    .teacher-avatar{max-width:180px;margin:0 auto;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+    .process-grid{grid-template-columns:repeat(2,1fr);}
+    .format-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:720px){
+    .nav-links{display:none;}
+    .burger{display:flex;}
+    .nav-right .lang-switch, .nav-right .theme-btn{display:none;}
+    .section{padding:64px 0;}
+    .cta-strip{padding:34px 26px;flex-direction:column;align-items:flex-start;}
+    .footer-grid{grid-template-columns:1fr;gap:28px;}
+    .hero{padding:44px 0 46px;}
+    .terminal-body{font-size:13px;min-height:230px;}
+    .filter-bar{gap:8px;}
+    .filter-btn{padding:8px 14px;font-size:12.5px;}
+    .process-grid{grid-template-columns:1fr;}
+    .back-to-top{bottom:16px;right:16px;width:42px;height:42px;}
+    .toast-container{left:16px;right:16px;max-width:none;bottom:16px;}
+  }
+  @media (max-width:480px){
+    .hero-cta{flex-direction:column;align-items:stretch;}
+    .hero-cta .btn{width:100%;}
+    .card-actions{flex-direction:column;}
+    .format-card h3{padding-right:0;}
+    .format-badge{position:static;display:inline-block;margin-bottom:12px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+
+<header>
+  <nav class="nav">
+    <a href="#top" class="logo"><span class="brk">&lt;</span>Pycourse<span class="brk2">/&gt;</span></a>
+    <ul class="nav-links">
+      <li><a href="#courses" data-i18n="nav_courses">Курсы</a></li>
+      <li><a href="#format" data-i18n="nav_format">Формат</a></li>
+      <li><a href="#reviews" data-i18n="nav_reviews">Отзывы</a></li>
+      <li><a href="#teacher" data-i18n="nav_teacher">Преподаватель</a></li>
+      <li><a href="#faq" data-i18n="nav_faq">Вопросы</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="lang-switch" id="langSwitch">
+        <button data-lang="ru" class="active">RU</button>
+        <button data-lang="tj">ТҶ</button>
+      </div>
+      <button class="theme-btn" id="themeBtn" aria-label="Переключить тему" title="Переключить тему"></button>
+      <button class="btn btn-ghost btn-sm loginTrigger" data-i18n="nav_login">Войти</button>
+      <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#courses" data-i18n="nav_courses">Курсы</a>
+    <a href="#format" data-i18n="nav_format">Формат</a>
+    <a href="#reviews" data-i18n="nav_reviews">Отзывы</a>
+    <a href="#teacher" data-i18n="nav_teacher">Преподаватель</a>
+    <a href="#faq" data-i18n="nav_faq">Вопросы</a>
+    <div class="mm-controls">
+      <div class="lang-switch" id="langSwitchMobile">
+        <button data-lang="ru" class="active">RU</button>
+        <button data-lang="tj">ТҶ</button>
+      </div>
+      <button class="theme-btn" id="themeBtnMobile" aria-label="Переключить тему"></button>
+    </div>
+    <button class="btn btn-primary loginTrigger" data-i18n="nav_login">Войти</button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-blob b1"></div>
+    <div class="hero-blob b2"></div>
+    <div class="container hero-grid">
+      <div>
+        <span class="eyebrow" data-i18n="hero_eyebrow">онлайн-школа программирования</span>
+        <h1 data-i18n-html="hero_h1">Учись программировать — и открой дверь <span class="hl">в IT-профессию</span></h1>
+        <p class="hero-sub" data-i18n="hero_sub">Pycourse — платформа, где ты с нуля осваиваешь код: от первых строк на Python до frontend-разработки, Flask и основ кибербезопасности. Один преподаватель, пошаговая программа, поддержка на каждом шаге.</p>
+        <div class="hero-cta">
+          <a href="#courses" class="btn btn-primary" data-i18n="cta_choose">Выбрать курс →</a>
+          <a href="#video" class="btn btn-ghost" data-i18n="cta_video">Смотреть видео</a>
+        </div>
+        <div class="hero-meta">
+          <span data-i18n="meta1">5 курсов</span>
+          <span data-i18n="meta2">3–4.5 месяца обучения</span>
+          <span data-i18n="meta3">онлайн формат</span>
+        </div>
+      </div>
+
+      <div class="terminal reveal">
+        <div class="terminal-bar">
+          <span class="terminal-dot r"></span>
+          <span class="terminal-dot y"></span>
+          <span class="terminal-dot g"></span>
+          <span class="terminal-title">~/pycourse/welcome.py</span>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-line"><span class="cm" data-i18n="term_comment"># добро пожаловать в Pycourse</span></div>
+          <div class="terminal-line"><span class="kw">def</span> <span class="fn">start_learning</span>(you):</div>
+          <div class="terminal-line">&nbsp;&nbsp;skills = [<span class="str">"Python"</span>, <span class="str">"HTML/CSS"</span>, <span class="str">"Flask"</span>]</div>
+          <div class="terminal-line">&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">print</span>(<span id="typedOut"></span><span class="cursor"></span>)</div>
+          <br>
+          <div class="terminal-line"><span class="terminal-prompt">$</span> python welcome.py</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="process">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="process_eyebrow">как это работает</span>
+        <h2 data-i18n="process_h2">От записи до сертификата — 4 шага</h2>
+      </div>
+      <div class="process-grid" id="processGrid"></div>
+    </div>
+  </section>
+
+  <section class="section" id="video">
+    <div class="container intro">
+      <div class="intro-text reveal">
+        <span class="eyebrow" data-i18n="video_eyebrow">с чего начать</span>
+        <h2 data-i18n="video_h2">Ещё не решил, стоит ли идти в IT?</h2>
+        <p data-i18n="video_p1">Если вы только присматриваетесь к сфере — посмотрите короткое видео о том, что такое IT, какие направления в нём есть и как понять, что подходит именно вам.</p>
+        <p data-i18n="video_p2">После просмотра сможете сразу перейти к разделу с курсами и выбрать точку старта.</p>
+        <div class="intro-stats">
+          <div class="stat"><b data-count="5" data-suffix="">0</b><span data-i18n="stat1_label">направлений</span></div>
+          <div class="stat"><b data-count="1" data-suffix="">0</b><span data-i18n="stat2_label">преподаватель</span></div>
+          <div class="stat"><b data-count="0" data-suffix="₽">0₽</b><span data-i18n="stat3_label">для старта не нужно</span></div>
+        </div>
+      </div>
+      <div class="video-wrap reveal">
+        <video id="introVideo" src="video/20260913_090701.mp4" controls playsinline></video>
+        <div class="video-overlay" id="videoOverlay">
+          <div class="play-btn" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 4L20 12L6 20V4Z" fill="currentColor"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="courses">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="courses_eyebrow">программа обучения</span>
+        <h2 data-i18n="courses_h2">Курсы</h2>
+        <p data-i18n="courses_p">Выбери направление и начни путь в IT уже сегодня. Каждый курс — с нуля, без формул «сначала пойми теорию».</p>
+      </div>
+
+      <div class="filter-bar reveal" id="filterBar"></div>
+      <div class="course-grid" id="courseGrid"></div>
+    </div>
+  </section>
+
+  <section class="section" id="format">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="format_eyebrow">формат обучения</span>
+        <h2 data-i18n="format_h2">Выбери, как удобнее учиться</h2>
+        <p data-i18n="format_p">Групповые занятия дешевле, индивидуальные — быстрее и гибче по расписанию.</p>
+      </div>
+      <div class="format-grid" id="formatGrid"></div>
+    </div>
+  </section>
+
+  <section class="section" id="reviews">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="reviews_eyebrow">что говорят студенты</span>
+        <h2 data-i18n="reviews_h2">Отзывы</h2>
+        <p data-i18n="reviews_p">Примеры отзывов — замените на реальные истории своих учеников.</p>
+      </div>
+      <div class="test-grid" id="testGrid"></div>
+    </div>
+  </section>
+
+  <section class="section" id="teacher">
+    <div class="container">
+      <div class="teacher reveal">
+        <div class="teacher-avatar"><span class="initials">АМ</span></div>
+        <div class="teacher-info">
+          <span class="role" data-i18n="teacher_role">преподаватель Pycourse</span>
+          <h3>Арипов Мирзошариф</h3>
+          <p data-i18n="teacher_bio">Ведёт все курсы платформы — от первых шагов в Python до Flask и frontend-разработки. Объясняет сложные темы простым языком и разбирает решения на реальных задачах, а не только в теории.</p>
+          <div class="teacher-tags">
+            <span class="tag">Python</span>
+            <span class="tag">HTML/CSS</span>
+            <span class="tag">JavaScript</span>
+            <span class="tag">Flask</span>
+            <span class="tag">SQLAlchemy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="faq_eyebrow">частые вопросы</span>
+        <h2 data-i18n="faq_h2">Вопросы и ответы</h2>
+      </div>
+      <div class="faq-list reveal" id="faqList"></div>
+    </div>
+  </section>
+
+  <section class="section" id="enroll">
+    <div class="container">
+      <div class="cta-strip reveal">
+        <div>
+          <h3 data-i18n="cta_strip_h3">Готов начать путь в IT?</h3>
+          <p data-i18n="cta_strip_p">Выбери курс выше и запишись на первый бесплатный вводный урок.</p>
+        </div>
+        <div class="cta-strip-actions">
+          <button class="btn btn-primary" id="ctaEnrollBtn" data-i18n="btn_enroll">Записаться</button>
+          <a href="#courses" class="btn btn-ghost" data-i18n="cta_choose">Выбрать курс →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#top" class="logo"><span class="brk">&lt;</span>Pycourse<span class="brk2">/&gt;</span></a>
+        <p data-i18n="footer_desc">Платформа, где учатся будущие ИТ-специалисты. Программирование, веб-разработка и компьютерная грамотность с нуля.</p>
+      </div>
+      <div>
+        <h4 data-i18n="footer_sections">Разделы</h4>
+        <div class="flinks">
+          <a href="#courses" data-i18n="nav_courses">Курсы</a>
+          <a href="#format" data-i18n="nav_format">Формат</a>
+          <a href="#reviews" data-i18n="nav_reviews">Отзывы</a>
+          <a href="#teacher" data-i18n="nav_teacher">Преподаватель</a>
+          <a href="#faq" data-i18n="nav_faq">Вопросы</a>
+        </div>
+      </div>
+      <div>
+        <h4 data-i18n="footer_contacts">Контакты</h4>
+        <div class="flinks">
+          <a href="#">Telegram</a>
+          <a href="#">Instagram</a>
+          <a href="#">Email</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Pycourse</span>
+      <span>&lt;/&gt;</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Наверх">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="modal-overlay" id="loginModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h3 id="modalTitle" data-i18n="login_title">Вход</h3>
+      <button class="modal-close" id="modalClose" aria-label="Закрыть">×</button>
+    </div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail" data-i18n="label_email">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" required>
+      </div>
+      <div class="field">
+        <label for="loginPass" data-i18n="label_pass">Пароль</label>
+        <input type="password" id="loginPass" placeholder="********" required>
+      </div>
+      <p class="form-error" id="loginError"></p>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="btn_login">Войти</button>
+      <p class="modal-note">Демо-доступ — учитель: <code>admin@pycourse.tj / admin123</code>, ученик: <code>pupil@pycourse.tj / pupil123</code></p>
+      <p class="modal-note">Свой логин и пароль для учеников создаёт учитель в своём кабинете.</p>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="courseModal">
+  <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+    <div class="modal-head">
+      <h3 id="cmTitle">—</h3>
+      <button class="modal-close" id="cmClose" aria-label="Закрыть">×</button>
+    </div>
+    <div class="cm-meta" id="cmMeta"></div>
+    <p class="cm-desc" id="cmDesc"></p>
+    <p class="cm-section-title" id="cmModTitle">Чему научишься</p>
+    <ul class="cm-list" id="cmModules"></ul>
+    <p class="cm-section-title" id="cmReqTitle">Что понадобится</p>
+    <ul class="cm-list req" id="cmReq"></ul>
+    <div class="cm-price-row">
+      <span class="price" id="cmPrice"></span>
+      <button class="btn btn-primary" id="cmEnroll">Записаться</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="enrollModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="enrollTitle">
+    <div class="modal-head">
+      <h3 id="enrollTitle" data-i18n="enroll_title">Записаться на курс</h3>
+      <button class="modal-close" id="enrollClose" aria-label="Закрыть">×</button>
+    </div>
+    <form id="enrollForm">
+      <div class="field">
+        <label for="enrollCourse" data-i18n="label_course">Курс</label>
+        <select id="enrollCourse"></select>
+      </div>
+      <div class="field">
+        <label for="enrollName" data-i18n="label_name">Имя</label>
+        <input type="text" id="enrollName" required>
+      </div>
+      <div class="field">
+        <label for="enrollPhone" data-i18n="label_phone">Телефон</label>
+        <input type="tel" id="enrollPhone" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="btn_submit">Отправить заявку</button>
+      <p class="modal-note" data-i18n="enroll_note">Демо-форма — подключите приём заявок на своём сервере.</p>
+    </form>
+  </div>
+</div>
+
+<script src="api.js"></script>
+<script>
+(function(){
+
+  var UI = {
+    ru:{
+      nav_courses:"Курсы", nav_format:"Формат", nav_reviews:"Отзывы", nav_teacher:"Преподаватель", nav_faq:"Вопросы", nav_login:"Войти",
+      hero_eyebrow:"онлайн-школа программирования",
+      hero_h1:'Учись программировать — и открой дверь <span class="hl">в IT-профессию</span>',
+      hero_sub:"Pycourse — платформа, где ты с нуля осваиваешь код: от первых строк на Python до frontend-разработки, Flask и основ кибербезопасности. Один преподаватель, пошаговая программа, поддержка на каждом шаге.",
+      cta_choose:"Выбрать курс →", cta_video:"Смотреть видео",
+      meta1:"5 курсов", meta2:"3–4.5 месяца обучения", meta3:"онлайн формат",
+      term_comment:"# добро пожаловать в Pycourse",
+      process_eyebrow:"как это работает", process_h2:"От записи до сертификата — 4 шага",
+      video_eyebrow:"с чего начать",
+      video_h2:"Ещё не решил, стоит ли идти в IT?",
+      video_p1:"Если вы только присматриваетесь к сфере — посмотрите короткое видео о том, что такое IT, какие направления в нём есть и как понять, что подходит именно вам.",
+      video_p2:"После просмотра сможете сразу перейти к разделу с курсами и выбрать точку старта.",
+      stat1_label:"направлений", stat2_label:"преподаватель", stat3_label:"для старта не нужно",
+      video_caption:'Что такое IT? · 4 мин · добавьте свой видеофайл в src="" тега <video>',
+      courses_eyebrow:"программа обучения", courses_h2:"Курсы",
+      courses_p:"Выбери направление и начни путь в IT уже сегодня. Каждый курс — с нуля, без формул «сначала пойми теорию».",
+      filter_all:"Все", filter_prog:"Программирование", filter_web:"Веб-разработка", filter_infra:"Инфраструктура",
+      level_label:"Уровень", duration_label:"Длительность", teacher_label:"Преподаватель", price_label:"Стоимость",
+      btn_more:"Подробнее", btn_enroll:"Записаться",
+      cm_modules_title:"Чему научишься", cm_req_title:"Что понадобится", cm_enroll:"Записаться на курс",
+      format_eyebrow:"формат обучения", format_h2:"Выбери, как удобнее учиться",
+      format_p:"Групповые занятия дешевле, индивидуальные — быстрее и гибче по расписанию.",
+      reviews_eyebrow:"что говорят студенты", reviews_h2:"Отзывы",
+      reviews_p:"Примеры отзывов — замените на реальные истории своих учеников.",
+      teacher_role:"преподаватель Pycourse",
+      teacher_bio:"Ведёт все курсы платформы — от первых шагов в Python до Flask и frontend-разработки. Объясняет сложные темы простым языком и разбирает решения на реальных задачах, а не только в теории.",
+      faq_eyebrow:"частые вопросы", faq_h2:"Вопросы и ответы",
+      cta_strip_h3:"Готов начать путь в IT?", cta_strip_p:"Выбери курс выше и запишись на первый бесплатный вводный урок.",
+      footer_desc:"Платформа, где учатся будущие ИТ-специалисты. Программирование, веб-разработка и компьютерная грамотность с нуля.",
+      footer_sections:"Разделы", footer_contacts:"Контакты",
+      login_title:"Вход", label_email:"Email", label_pass:"Пароль", btn_login:"Войти",
+      login_note:"Форма демонстрационная — подключите свою систему авторизации.",
+      enroll_title:"Записаться на курс", label_course:"Курс", label_name:"Имя", label_phone:"Телефон",
+      btn_submit:"Отправить заявку", enroll_note:"Демо-форма — подключите приём заявок на своём сервере.",
+      toast_success:"Заявка отправлена! Мы свяжемся с вами.",
+      theme_title:"Переключить тему"
+    },
+    tj:{
+      nav_courses:"Курсҳо", nav_format:"Формат", nav_reviews:"Фикру мулоҳизаҳо", nav_teacher:"Муаллим", nav_faq:"Саволҳо", nav_login:"Воридшавӣ",
+      hero_eyebrow:"мактаби онлайни барномасозӣ",
+      hero_h1:'Барномасозиро омӯз — ва дари <span class="hl">касби IT</span>-ро кушо',
+      hero_sub:"Pycourse — платформае, ки шумо аз сифр кодро меомӯзед: аз сатрҳои аввали Python то таҳияи frontend, Flask ва асосҳои амнияти киберӣ. Як муаллим, барномаи қадам ба қадам, дастгирӣ дар ҳар марҳила.",
+      cta_choose:"Курс интихоб кунед →", cta_video:"Видеоро тамошо кунед",
+      meta1:"5 курс", meta2:"3–4.5 моҳи таҳсил", meta3:"формати онлайн",
+      term_comment:"# ба Pycourse хуш омадед",
+      process_eyebrow:"ин чӣ гуна кор мекунад", process_h2:"Аз сабти ном то сертификат — 4 қадам",
+      video_eyebrow:"аз куҷо сар кардан",
+      video_h2:"Ҳанӯз қарор нагирифтаед, ки ба IT равед?",
+      video_p1:"Агар шумо танҳо ба ин соҳа нигоҳ карда истода бошед — видеои кӯтоҳро дар бораи он, ки IT чист, кадом самтҳо дорад ва чӣ тавр фаҳмидан, ки барои шумо мувофиқ аст, тамошо кунед.",
+      video_p2:"Пас аз тамошо шумо метавонед бевосита ба бахши курсҳо гузаред ва нуқтаи сар карданро интихоб кунед.",
+      stat1_label:"самт", stat2_label:"муаллим", stat3_label:"барои сар кардан лозим нест",
+      video_caption:'IT чист? · 4 дақ · файли видеои худро ба src="" -и тегi <video> илова кунед',
+      courses_eyebrow:"барномаи таҳсил", courses_h2:"Курсҳо",
+      courses_p:"Самтро интихоб кунед ва роҳи IT-ро ҳамин рӯз оғоз кунед. Ҳар курс — аз сифр, бе қоидаи «аввал назарияро фаҳм».",
+      filter_all:"Ҳама", filter_prog:"Барномасозӣ", filter_web:"Веб-таҳия", filter_infra:"Инфраструктура",
+      level_label:"Дараҷа", duration_label:"Давомнокӣ", teacher_label:"Муаллим", price_label:"Нарх",
+      btn_more:"Тафсилот", btn_enroll:"Сабти ном",
+      cm_modules_title:"Чиро меомӯзед", cm_req_title:"Чӣ лозим аст", cm_enroll:"Ба курс сабти ном шавед",
+      format_eyebrow:"формати таҳсил", format_h2:"Интихоб кун, чӣ тавр омӯхтан бароҳат аст",
+      format_p:"Дарсҳои гурӯҳӣ арзонтаранд, инфиродӣ — тезтар ва аз рӯи ҷадвал чандирдиранд.",
+      reviews_eyebrow:"донишҷӯён чӣ мегӯянд", reviews_h2:"Фикру мулоҳизаҳо",
+      reviews_p:"Намунаи фикру мулоҳизаҳо — бо ҳикояҳои воқеии донишҷӯёни худ иваз кунед.",
+      teacher_role:"муаллими Pycourse",
+      teacher_bio:"Ҳамаи курсҳои платформаро мебарад — аз қадамҳои аввали Python то Flask ва таҳияи frontend. Мавзӯъҳои мураккабро бо забони содда мефаҳмонад ва ҳалро дар мисоли масъалаҳои воқеӣ таҳлил мекунад.",
+      faq_eyebrow:"саволҳои маъмул", faq_h2:"Саволу ҷавобҳо",
+      cta_strip_h3:"Омодаед, ки роҳи IT-ро оғоз кунед?", cta_strip_p:"Курсро дар боло интихоб кунед ва ба дарси якуми ройгони муқаддимавӣ сабти ном шавед.",
+      footer_desc:"Платформае, ки дар он мутахассисони ояндаи IT таҳсил мекунанд. Барномасозӣ, веб-таҳия ва саводнокии компютерӣ аз сифр.",
+      footer_sections:"Бахшҳо", footer_contacts:"Тамос",
+      login_title:"Воридшавӣ", label_email:"Email", label_pass:"Парол", btn_login:"Воридшавӣ",
+      login_note:"Ин форма намоишӣ аст — системаи худи аутентификатсияро пайваст кунед.",
+      enroll_title:"Ба курс сабти ном шав", label_course:"Курс", label_name:"Ном", label_phone:"Телефон",
+      btn_submit:"Дархостро фиристед", enroll_note:"Формаи намоишӣ — қабули дархостҳоро дар сервери худ пайваст кунед.",
+      toast_success:"Дархост фиристода шуд! Мо бо шумо тамос мегирем.",
+      theme_title:"Мавзӯъро иваз кунед"
+    }
+  };
+
+  var typedPhrases = {
+    ru:['"Добро пожаловать в Pycourse!"','"Твой первый шаг в IT начинается здесь"','"От Python до frontend — шаг за шагом"'],
+    tj:['"Ба Pycourse хуш омадед!"','"Қадами аввали шумо дар IT аз ин ҷо сар мешавад"','"Аз Python то frontend — қадам ба қадам"']
+  };
+
+  var ICONS = {
+    python:'<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M13 3c-5 0-4.7 2.2-4.7 2.2v2.3h4.8v.7H6.4S3 7.8 3 13s3 5 3 5h1.8v-2.4S7.6 13 10 13h6c2.3 0 4.2-1.9 4.2-4.2V5.2S20.5 3 13 3Zm-2.6 1.5c.5 0 .9.4.9.9s-.4.9-.9.9-.9-.4-.9-.9.4-.9.9-.9Z" fill="#5fe3b3"/><path d="M13 23c5 0 4.7-2.2 4.7-2.2v-2.3h-4.8v-.7h6.7S23 18.2 23 13s-3-5-3-5h-1.8v2.4S18.4 13 16 13h-6c-2.3 0-4.2 1.9-4.2 4.2v3.6S5.5 23 13 23Zm2.6-1.5c-.5 0-.9-.4-.9-.9s.4-.9.9-.9.9.4.9.9-.4.9-.9.9Z" fill="#eab454"/></svg>',
+    html:'<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><path d="M4 3h18l-1.6 18L13 23l-7.4-2L4 3Z" fill="#e8735f" fill-opacity=".18"/><path d="M4 3h18l-1.6 18L13 23l-7.4-2L4 3Z" stroke="#e8735f" stroke-width="1.3"/><path d="M8 8h10l-.3 3H9.6l.2 2h7.4l-.5 5.4L13 19.5l-3.7-1.1-.2-2.4" stroke="#eab454" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    frontend:'<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><ellipse cx="13" cy="13" rx="10" ry="4.2" stroke="#5fe3b3" stroke-width="1.2"/><ellipse cx="13" cy="13" rx="10" ry="4.2" stroke="#5fe3b3" stroke-width="1.2" transform="rotate(60 13 13)"/><ellipse cx="13" cy="13" rx="10" ry="4.2" stroke="#5fe3b3" stroke-width="1.2" transform="rotate(120 13 13)"/><circle cx="13" cy="13" r="2.3" fill="#eab454"/></svg>',
+    flask:'<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="4" y="6" width="18" height="14" rx="2" stroke="#eab454" stroke-width="1.3"/><path d="M4 10h18" stroke="#eab454" stroke-width="1.3"/><circle cx="7" cy="8" r=".8" fill="#e8735f"/><circle cx="9.5" cy="8" r=".8" fill="#5fe3b3"/><path d="M8 14l3 2-3 2M13 18h5" stroke="#5fe3b3" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    computer:'<svg width="26" height="26" viewBox="0 0 26 26" fill="none"><rect x="3" y="5" width="20" height="13" rx="1.5" stroke="#5fe3b3" stroke-width="1.3"/><path d="M9 22h8M13 18v4" stroke="#5fe3b3" stroke-width="1.3" stroke-linecap="round"/><path d="M7 9l3 2.5L7 14" stroke="#eab454" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 14h6" stroke="#eab454" stroke-width="1.3" stroke-linecap="round"/></svg>',
+    check:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.9-6.2 3.9 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>'
+  };
+
+  var COURSES = [
+    { id:'python', ext:'main.py', num:'01', icon:ICONS.python, cat:'prog', rating:'4.9', duration:{ru:'3 месяца',tj:'3 моҳ'},
+      level:{ru:'Начальный',tj:'Ибтидоӣ'}, teacher:'Арипов Мирзошариф', priceRub:'2500 ₽', priceSm:'300 сомонӣ',
+      title:{ru:'Python для начинающих', tj:'Python барои навомӯзон'},
+      desc:{ru:'С нуля до ООП: синтаксис, структуры данных, работа с файлами и знакомство с библиотеками tkinter и json.', tj:'Аз сифр то ООП: синтаксис, сохторҳои маълумот, кор бо файлҳо ва шиносоӣ бо китобхонаҳои tkinter ва json.'},
+      modules:{
+        ru:['Синтаксис и типы данных','Условия, циклы и функции','Работа со списками и словарями','Файлы, исключения и модули','Мини-проект: консольное приложение'],
+        tj:['Синтаксис ва навъҳои маълумот','Шартҳо, давраҳо ва функсияҳо','Кор бо рӯйхатҳо ва луғатҳо','Файлҳо, истисноҳо ва модулҳо','Лоиҳаи хурд: барномаи консолӣ']
+      },
+      req:{ru:['Компьютер или ноутбук с интернетом','Желание учиться — опыт не нужен'], tj:['Компютер ё ноутбук бо интернет','Хоҳиши омӯхтан — таҷриба лозим нест']}
+    },
+    { id:'html', ext:'index.html', num:'02', icon:ICONS.html, cat:'web', rating:'4.8', duration:{ru:'3 месяца',tj:'3 моҳ'},
+      level:{ru:'Начальный',tj:'Ибтидоӣ'}, teacher:'Арипов Мирзошариф', priceRub:'3000 ₽', priceSm:'350 сомонӣ',
+      title:{ru:'HTML и CSS с нуля', tj:'HTML ва CSS аз сифр'},
+      desc:{ru:'От тегов и атрибутов до grid, flex, медиазапросов и основ работы с git.', tj:'Аз тегҳо ва атрибутҳо то grid, flex, дархостҳои медиа ва асосҳои кор бо git.'},
+      modules:{
+        ru:['Теги, атрибуты и структура страницы','Стилизация с CSS: селекторы и box-model','Flexbox и Grid','Адаптивная вёрстка и @media','Основы Git и публикация сайта'],
+        tj:['Тегҳо, атрибутҳо ва сохтори саҳифа','Ороиш бо CSS: селекторҳо ва box-model','Flexbox ва Grid','Тарҳбандии мутобиқшаванда ва @media','Асосҳои Git ва нашри сайт']
+      },
+      req:{ru:['Компьютер или ноутбук с интернетом','Желание учиться — опыт не нужен'], tj:['Компютер ё ноутбук бо интернет','Хоҳиши омӯхтан — таҷриба лозим нест']}
+    },
+    { id:'frontend', ext:'App.jsx', num:'03', icon:ICONS.frontend, cat:'web', rating:'4.9', duration:{ru:'4.5 месяца',tj:'4.5 моҳ'},
+      level:{ru:'Средний',tj:'Миёна'}, teacher:'Арипов Мирзошариф', priceRub:'5700 ₽', priceSm:'550 сомонӣ',
+      title:{ru:'Frontend-разработчик', tj:'Frontend-таҳиягар'},
+      desc:{ru:'HTML, CSS, JavaScript и React. Соберёшь собственные сайты, включая интернет-магазин.', tj:'HTML, CSS, JavaScript ва React. Шумо сайтҳои худро, аз ҷумла мағозаи интернетӣ, месозед.'},
+      modules:{
+        ru:['JavaScript: переменные, функции, DOM','Асинхронность и работа с API','Основы React: компоненты и props','Состояние, хуки и роутинг','Итоговый проект: интернет-магазин'],
+        tj:['JavaScript: тағйирёбандаҳо, функсияҳо, DOM','Асинхронӣ ва кор бо API','Асосҳои React: компонентҳо ва props','Ҳолат (state), hooks ва роутинг','Лоиҳаи ниҳоӣ: мағозаи интернетӣ']
+      },
+      req:{ru:['Знание HTML/CSS на базовом уровне','Компьютер с интернетом'], tj:['Донистани HTML/CSS дар сатҳи асосӣ','Компютер бо интернет']}
+    },
+    { id:'flask', ext:'app.py', num:'04', icon:ICONS.flask, cat:'prog', rating:'4.7', duration:{ru:'3 месяца',tj:'3 моҳ'},
+      level:{ru:'Средний',tj:'Миёна'}, teacher:'Арипов Мирзошариф', priceRub:'4000 ₽', priceSm:'400 сомонӣ',
+      title:{ru:'Flask с нуля', tj:'Flask аз сифр'},
+      desc:{ru:'Создание веб-сайтов на Flask и работа с базами данных через SQLAlchemy.', tj:'Сохтани сайтҳо дар Flask ва кор бо пойгоҳи додаҳо тавассути SQLAlchemy.'},
+      modules:{
+        ru:['Основы Flask: маршруты и шаблоны','Формы и обработка запросов','База данных и SQLAlchemy','Аутентификация пользователей','Деплой готового сервиса'],
+        tj:['Асосҳои Flask: роутҳо ва қолабҳо','Формаҳо ва коркарди дархостҳо','Пойгоҳи додаҳо ва SQLAlchemy','Санҷиши ҳисоби корбарон','Ҷойгиркунии хидмати тайёр']
+      },
+      req:{ru:['Базовые знания Python','Компьютер с интернетом'], tj:['Донишҳои асосии Python','Компютер бо интернет']}
+    },
+    { id:'computer', ext:'setup.sh', num:'05', icon:ICONS.computer, cat:'infra', rating:'4.6', duration:{ru:'3 месяца',tj:'3 моҳ'},
+      level:{ru:'Начальный',tj:'Ибтидоӣ'}, teacher:'Арипов Мирзошариф', priceRub:'6000 ₽', priceSm:'540 сомонӣ',
+      title:{ru:'Основы компьютера', tj:'Асосҳои компютер'},
+      desc:{ru:'От «что такое бит» до уверенной работы с ПК: установка Windows и азы кибербезопасности.', tj:'Аз «бит чист» то кори боэътимод бо компютер: насби Windows ва асосҳои амнияти киберӣ.'},
+      modules:{
+        ru:['Устройство компьютера и ОС','Установка Windows и драйверов','Базовая диагностика и ремонт','Работа с офисными программами','Основы кибербезопасности'],
+        tj:['Сохти компютер ва системаи оперативӣ','Насби Windows ва драйверҳо','Ташхис ва таъмири асосӣ','Кор бо барномаҳои офис','Асосҳои амнияти киберӣ']
+      },
+      req:{ru:['Компьютер (можно старый) для практики','Желание учиться — опыт не нужен'], tj:['Компютер (кӯҳна ҳам мумкин аст) барои амалия','Хоҳиши омӯхтан — таҷриба лозим нест']}
+    }
+  ];
+
+  var FILTERS = [
+    {key:'all', i18n:'filter_all'},
+    {key:'prog', i18n:'filter_prog'},
+    {key:'web', i18n:'filter_web'},
+    {key:'infra', i18n:'filter_infra'}
+  ];
+
+  var PROCESS = [
+    { title:{ru:'Выбираешь курс',tj:'Курсро интихоб мекунӣ'}, desc:{ru:'Смотришь программу и записываешься на бесплатный вводный урок.',tj:'Барномаро мебинӣ ва ба дарси ройгони муқаддимавӣ сабти ном мешавӣ.'} },
+    { title:{ru:'Вводный урок',tj:'Дарси муқаддимавӣ'}, desc:{ru:'Знакомишься с форматом и преподавателем, задаёшь вопросы.',tj:'Бо формат ва муаллим шинос мешавӣ, саволҳо медиҳӣ.'} },
+    { title:{ru:'Учишься по модулям',tj:'Тибқи модулҳо меомӯзӣ'}, desc:{ru:'Проходишь программу шаг за шагом, делаешь практические задания.',tj:'Барномаро қадам ба қадам мегузаронӣ, вазифаҳои амалӣ иҷро мекунӣ.'} },
+    { title:{ru:'Получаешь сертификат',tj:'Сертификат мегирӣ'}, desc:{ru:'Завершаешь курс с готовым проектом и сертификатом.',tj:'Курсро бо лоиҳаи тайёр ва сертификат ба анҷом мерасонӣ.'} }
+  ];
+
+  var FORMATS = [
+    { featured:true, badge:{ru:'Популярный выбор',tj:'Интихоби маъмул'}, title:{ru:'Групповое обучение',tj:'Таҳсили гурӯҳӣ'},
+      features:{ru:['До 10 человек в группе','Фиксированное расписание 2–3 раза в неделю','Общий чат с одногруппниками','Стоимость — по прайсу курса'],
+                tj:['То 10 нафар дар гурӯҳ','Ҷадвали муайян 2–3 маротиба дар як ҳафта','Чати умумӣ бо ҳамгурӯҳиён','Нарх — тибқи нархномаи курс']} },
+    { featured:false, badge:{ru:'Быстрый результат',tj:'Натиҷаи тез'}, title:{ru:'Индивидуальные занятия',tj:'Дарсҳои инфиродӣ'},
+      features:{ru:['Один на один с преподавателем','Гибкое расписание под тебя','Темп обучения — индивидуальный','Стоимость выше — уточняйте при записи'],
+                tj:['Танҳо ту ва муаллим','Ҷадвали чандир мувофиқи ту','Суръати таҳсил — инфиродӣ','Нарх баландтар — ҳангоми сабти ном пурсед']} }
+  ];
+
+  var TESTIMONIALS = [
+    { initials:'СН', color:'var(--gold-400)', name:'Севара Н.',
+      quote:{ru:'Пришла без единой строчки кода. Через три месяца курса по Python уже писала свои первые скрипты и не боялась ошибок в консоли.', tj:'Ман бе як сатр код омада будам. Пас аз се моҳи курси Python аллакай скриптҳои аввалини худро менавиштам ва аз хатоҳои консол наметарсидам.'},
+      course:{ru:'курс «Python для начинающих»', tj:'курси «Python барои навомӯзон»'}
+    },
+    { initials:'ДК', color:'var(--mint-400)', name:'Далер К.',
+      quote:{ru:'Объясняют по шагам, без «воды». После HTML/CSS сразу перешёл на frontend-курс — было легко, потому что база уже была понятной.', tj:'Қадам ба қадам, бе «об» мефаҳмонанд. Пас аз HTML/CSS ман фавран ба курси frontend гузаштам — осон буд, зеро асос аллакай возеҳ буд.'},
+      course:{ru:'курс «HTML и CSS с нуля»', tj:'курси «HTML ва CSS аз сифр»'}
+    },
+    { initials:'АР', color:'var(--coral-400)', name:'Азиз Р.',
+      quote:{ru:'Собрал свой первый сайт-магазин на курсе Frontend-разработчик. Приятно удивило, что почти всё обучение — практика на реальных задачах.', tj:'Дар курси Frontend-таҳиягар аввалин сайт-мағозаи худро сохтам. Хеле хуш буд, ки қариб тамоми таҳсил — амалия дар масъалаҳои воқеӣ буд.'},
+      course:{ru:'курс «Frontend-разработчик»', tj:'курси «Frontend-таҳиягар»'}
+    }
+  ];
+
+  var FAQS = [
+    {q:{ru:'Нужен ли опыт программирования, чтобы начать?',tj:'Оё барои сар кардан таҷрибаи барномасозӣ лозим аст?'}, a:{ru:'Нет, все курсы построены с нуля. Единственное условие — уверенное пользование компьютером на базовом уровне.',tj:'Не, ҳамаи курсҳо аз сифр сохта шудаанд. Шарти ягона — истифодаи боэътимоди компютер дар сатҳи асосӣ.'}},
+    {q:{ru:'В каком формате проходит обучение?',tj:'Таҳсил дар кадом формат мегузарад?'}, a:{ru:'Онлайн, с фиксированным расписанием занятий и обратной связью от преподавателя по домашним заданиям.',tj:'Онлайн, бо ҷадвали муайяни дарсҳо ва бозхонди муаллим оид ба вазифаҳои хонагӣ.'}},
+    {q:{ru:'На каких языках ведётся обучение?',tj:'Таҳсил бо кадом забонҳо мегузарад?'}, a:{ru:'Занятия и материалы доступны на русском и таджикском языках — выберите удобный вариант при записи.',tj:'Дарсҳо ва маводҳо бо забонҳои русӣ ва тоҷикӣ дастрасанд — ҳангоми сабти ном вариантро интихоб кунед.'}},
+    {q:{ru:'Выдаётся ли сертификат после окончания курса?',tj:'Оё пас аз хатми курс сертификат дода мешавад?'}, a:{ru:'Да, по итогам курса выдаётся сертификат о прохождении программы.',tj:'Бале, дар натиҷаи курс сертификати хатми барнома дода мешавад.'}},
+    {q:{ru:'Можно ли оплатить курс частями?',tj:'Оё пардохти курсро қисм-қисм кардан мумкин аст?'}, a:{ru:'Да, возможна оплата в рассрочку — уточните детали у преподавателя при записи на курс.',tj:'Бале, пардохти бавосита имконпазир аст — тафсилотро ҳангоми сабти ном аз муаллим пурсед.'}},
+    {q:{ru:'Есть ли пробный урок перед оплатой?',tj:'Оё пеш аз пардохт дарси озмоишӣ ҳаст?'}, a:{ru:'Да, вводное занятие бесплатное — вы сможете познакомиться с форматом до принятия решения.',tj:'Бале, дарси муқаддимавӣ ройгон аст — шумо метавонед пеш аз қарор бо формат шинос шавед.'}},
+    {q:{ru:'Что если я пропущу занятие?',tj:'Агар дарсро гузарам, чӣ мешавад?'}, a:{ru:'Запись урока остаётся доступной, а преподаватель поможет наверстать пропущенную тему.',tj:'Сабти дарс дастрас мемонад ва муаллим барои азхудкунии мавзӯи гузошташуда кӯмак мекунад.'}},
+    {q:{ru:'Нужен ли мощный компьютер для обучения?',tj:'Оё барои таҳсил компютери пурқувват лозим аст?'}, a:{ru:'Нет, подойдёт любой современный ноутбук или ПК с доступом в интернет.',tj:'Не, ҳар як ноутбук ё компютери муосир бо дастрасии интернет мувофиқ аст.'}},
+    {q:{ru:'Помогаете ли вы с трудоустройством после курса?',tj:'Оё шумо баъд аз курс дар ҷойгиркунии корӣ кӯмак мекунед?'}, a:{ru:'Мы помогаем собрать портфолио и готовим к собеседованиям, но гарантию трудоустройства не даём.',tj:'Мо дар ҷамъоварии портфолио кӯмак мекунем ва барои мусоҳиба тайёр мекунем, аммо кафолати ҷойгиркунии корӣ намедиҳем.'}}
+  ];
+
+  var state = { lang:'ru', theme:'green', filter:'all' };
+
+  function applyStaticI18n(){
+    var dict = UI[state.lang];
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key = el.getAttribute('data-i18n');
+      if(dict[key] !== undefined) el.textContent = dict[key];
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function(el){
+      var key = el.getAttribute('data-i18n-html');
+      if(dict[key] !== undefined) el.innerHTML = dict[key];
+    });
+    document.documentElement.setAttribute('lang', state.lang === 'ru' ? 'ru' : 'tg');
+  }
+
+  function renderFilters(){
+    var dict = UI[state.lang];
+    var bar = document.getElementById('filterBar');
+    bar.innerHTML = FILTERS.map(function(f){
+      return '<button class="filter-btn'+(state.filter===f.key?' active':'')+'" data-filter="'+f.key+'">'+dict[f.i18n]+'</button>';
+    }).join('');
+    bar.querySelectorAll('.filter-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        state.filter = btn.getAttribute('data-filter');
+        renderFilters();
+        renderCourses();
+      });
+    });
+  }
+
+  function renderCourses(){
+    var dict = UI[state.lang];
+    var grid = document.getElementById('courseGrid');
+    var list = COURSES.filter(function(c){ return state.filter==='all' || c.cat===state.filter; });
+    grid.innerHTML = list.map(function(c, i){
+      var modsHtml = c.modules[state.lang].slice(0,4).map(function(m){
+        return '<li>'+ICONS.check+'<span>'+m+'</span></li>';
+      }).join('');
+      return ''+
+      '<div class="course-card reveal stagger in" style="--d:'+i+'">'+
+        '<div class="file-tab"><span>'+c.num+'</span><span class="ext">'+c.ext+'</span></div>'+
+        '<div class="card-top">'+
+          '<div class="course-icon">'+c.icon+'</div>'+
+          '<div class="badges">'+
+            '<span class="level-badge">'+c.level[state.lang]+'</span>'+
+            '<span class="rating">'+ICONS.star+' '+c.rating+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="course-body">'+
+          '<h3>'+c.title[state.lang]+'</h3>'+
+          '<p class="desc">'+c.desc[state.lang]+'</p>'+
+          '<ul class="module-list">'+modsHtml+'</ul>'+
+          '<div class="course-meta">'+
+            '<div class="row"><span>'+dict.duration_label+'</span><b>'+c.duration[state.lang]+'</b></div>'+
+            '<div class="row"><span>'+dict.teacher_label+'</span><b>'+c.teacher+'</b></div>'+
+            '<div class="row"><span>'+dict.price_label+'</span><b class="price-tag">'+c.priceRub+' / '+c.priceSm+'</b></div>'+
+          '</div>'+
+          '<div class="card-actions">'+
+            '<button class="btn btn-ghost btn-more" data-id="'+c.id+'">'+dict.btn_more+'</button>'+
+            '<button class="btn btn-primary btn-enroll" data-id="'+c.id+'">'+dict.btn_enroll+'</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    grid.querySelectorAll('.btn-more').forEach(function(btn){
+      btn.addEventListener('click', function(){ openCourseModal(btn.getAttribute('data-id')); });
+    });
+    grid.querySelectorAll('.btn-enroll').forEach(function(btn){
+      btn.addEventListener('click', function(){ openEnrollModal(btn.getAttribute('data-id')); });
+    });
+  }
+
+  function openCourseModal(id){
+    var dict = UI[state.lang];
+    var c = COURSES.filter(function(x){ return x.id===id; })[0];
+    if(!c) return;
+    document.getElementById('cmTitle').textContent = c.title[state.lang];
+    document.getElementById('cmMeta').innerHTML =
+      '<span class="cm-pill">'+dict.level_label+': '+c.level[state.lang]+'</span>'+
+      '<span class="cm-pill">'+dict.duration_label+': '+c.duration[state.lang]+'</span>'+
+      '<span class="cm-pill">'+ICONS.star+' '+c.rating+'</span>';
+    document.getElementById('cmDesc').textContent = c.desc[state.lang];
+    document.getElementById('cmModTitle').textContent = dict.cm_modules_title;
+    document.getElementById('cmModules').innerHTML = c.modules[state.lang].map(function(m){
+      return '<li>'+ICONS.check+'<span>'+m+'</span></li>';
+    }).join('');
+    document.getElementById('cmReqTitle').textContent = dict.cm_req_title;
+    document.getElementById('cmReq').innerHTML = c.req[state.lang].map(function(r){
+      return '<li>'+ICONS.check+'<span>'+r+'</span></li>';
+    }).join('');
+    document.getElementById('cmPrice').textContent = c.priceRub+' / '+c.priceSm;
+    document.getElementById('cmEnroll').textContent = dict.cm_enroll;
+    document.getElementById('cmEnroll').setAttribute('data-id', c.id);
+    document.getElementById('courseModal').classList.add('open');
+  }
+
+  function renderProcess(){
+    var grid = document.getElementById('processGrid');
+    grid.innerHTML = PROCESS.map(function(p, i){
+      return ''+
+      '<div class="process-step reveal stagger in" style="--d:'+i+'">'+
+        '<div class="process-num">0'+(i+1)+'</div>'+
+        '<h4>'+p.title[state.lang]+'</h4>'+
+        '<p>'+p.desc[state.lang]+'</p>'+
+      '</div>';
+    }).join('');
+  }
+
+  function renderFormats(){
+    var grid = document.getElementById('formatGrid');
+    grid.innerHTML = FORMATS.map(function(f){
+      var featsHtml = f.features[state.lang].map(function(x){
+        return '<li>'+ICONS.check+'<span>'+x+'</span></li>';
+      }).join('');
+      return ''+
+      '<div class="format-card reveal in'+(f.featured?' featured':'')+'">'+
+        '<span class="format-badge">'+f.badge[state.lang]+'</span>'+
+        '<h3>'+f.title[state.lang]+'</h3>'+
+        '<ul class="format-features">'+featsHtml+'</ul>'+
+      '</div>';
+    }).join('');
+  }
+
+  function renderTestimonials(){
+    var grid = document.getElementById('testGrid');
+    grid.innerHTML = TESTIMONIALS.map(function(t){
+      return ''+
+      '<div class="test-card reveal in">'+
+        '<div class="quote-mark">"</div>'+
+        '<p>'+t.quote[state.lang]+'</p>'+
+        '<div class="test-person">'+
+          '<div class="avatar" style="background:'+t.color+'">'+t.initials+'</div>'+
+          '<div class="who"><b>'+t.name+'</b><span>'+t.course[state.lang]+'</span></div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  function renderFaq(){
+    var list = document.getElementById('faqList');
+    list.innerHTML = FAQS.map(function(f, i){
+      return ''+
+      '<div class="faq-item" data-i="'+i+'">'+
+        '<div class="faq-q"><span>'+f.q[state.lang]+'</span><span class="plus">+</span></div>'+
+        '<div class="faq-a"><p>'+f.a[state.lang]+'</p></div>'+
+      '</div>';
+    }).join('');
+    list.querySelectorAll('.faq-item').forEach(function(item){
+      var q = item.querySelector('.faq-q');
+      var a = item.querySelector('.faq-a');
+      q.addEventListener('click', function(){
+        var isOpen = item.classList.contains('open');
+        list.querySelectorAll('.faq-item.open').forEach(function(o){
+          if(o!==item){ o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight = null; }
+        });
+        item.classList.toggle('open', !isOpen);
+        a.style.maxHeight = !isOpen ? a.scrollHeight+'px' : null;
+      });
+    });
+  }
+
+  function renderEnrollOptions(preselectId){
+    var select = document.getElementById('enrollCourse');
+    select.innerHTML = COURSES.map(function(c){
+      return '<option value="'+c.id+'">'+c.title[state.lang]+'</option>';
+    }).join('');
+    if(preselectId) select.value = preselectId;
+  }
+
+  function setLang(lang){
+    state.lang = lang;
+    document.querySelectorAll('.lang-switch button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-lang')===lang);
+    });
+    applyStaticI18n();
+    renderFilters();
+    renderCourses();
+    renderProcess();
+    renderFormats();
+    renderTestimonials();
+    renderFaq();
+    renderEnrollOptions(document.getElementById('enrollCourse').value);
+  }
+  document.querySelectorAll('.lang-switch button').forEach(function(btn){
+    btn.addEventListener('click', function(){ setLang(btn.getAttribute('data-lang')); });
+  });
+
+  var ICON_LEAF = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 20c8-1 14-7 15-15C10 6 5 12 4 20Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+  var ICON_SUN = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  function renderThemeIcon(){
+    var icon = state.theme === 'green' ? ICON_LEAF : ICON_SUN;
+    document.getElementById('themeBtn').innerHTML = icon;
+    document.getElementById('themeBtnMobile').innerHTML = icon;
+  }
+  function setTheme(theme){
+    state.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    renderThemeIcon();
+  }
+  function toggleTheme(){ setTheme(state.theme === 'green' ? 'white' : 'green'); }
+  document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+  document.getElementById('themeBtnMobile').addEventListener('click', toggleTheme);
+
+  var burger = document.getElementById('burger');
+  var mobileMenu = document.getElementById('mobileMenu');
+  burger.addEventListener('click', function(){
+    var isOpen = mobileMenu.classList.toggle('open');
+    burger.classList.toggle('open', isOpen);
+    burger.setAttribute('aria-expanded', isOpen);
+  });
+  mobileMenu.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      mobileMenu.classList.remove('open');
+      burger.classList.remove('open');
+    });
+  });
+
+  var loginModal = document.getElementById('loginModal');
+  function redirectForUser(user){
+    window.location.href = user.role === 'admin' ? 'admin.html' : 'pupil.html';
+  }
+  function openLoginModal(){
+    PycourseAPI.me().then(function(existing){
+      if(existing){ redirectForUser(existing); return; }
+      loginModal.classList.add('open');
+    }).catch(function(){ loginModal.classList.add('open'); });
+  }
+  document.querySelectorAll('.loginTrigger').forEach(function(btn){
+    btn.addEventListener('click', openLoginModal);
+  });
+  document.getElementById('modalClose').addEventListener('click', function(){ loginModal.classList.remove('open'); });
+  loginModal.addEventListener('click', function(e){ if(e.target===loginModal) loginModal.classList.remove('open'); });
+
+  var loginForm = document.getElementById('loginForm');
+
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var email = document.getElementById('loginEmail').value;
+    var pass = document.getElementById('loginPass').value;
+    var errEl = document.getElementById('loginError');
+    var submitBtn = loginForm.querySelector('button[type="submit"]');
+    errEl.textContent = '';
+    submitBtn.disabled = true;
+    PycourseAPI.login(email, pass).then(function(user){
+      loginModal.classList.remove('open');
+      toast('Добро пожаловать, ' + user.name + '!');
+      setTimeout(function(){ redirectForUser(user); }, 500);
+    }).catch(function(err){
+      errEl.textContent = err.message || 'Неверный email или пароль.';
+    }).finally(function(){
+      submitBtn.disabled = false;
+    });
+  });
+
+  var courseModal = document.getElementById('courseModal');
+  document.getElementById('cmClose').addEventListener('click', function(){ courseModal.classList.remove('open'); });
+  courseModal.addEventListener('click', function(e){ if(e.target===courseModal) courseModal.classList.remove('open'); });
+  document.getElementById('cmEnroll').addEventListener('click', function(){
+    var id = this.getAttribute('data-id');
+    courseModal.classList.remove('open');
+    openEnrollModal(id);
+  });
+
+  var enrollModal = document.getElementById('enrollModal');
+  function openEnrollModal(courseId){
+    renderEnrollOptions(courseId);
+    enrollModal.classList.add('open');
+  }
+  document.getElementById('ctaEnrollBtn').addEventListener('click', function(){ openEnrollModal(null); });
+  document.getElementById('enrollClose').addEventListener('click', function(){ enrollModal.classList.remove('open'); });
+  enrollModal.addEventListener('click', function(e){ if(e.target===enrollModal) enrollModal.classList.remove('open'); });
+  document.getElementById('enrollForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    enrollModal.classList.remove('open');
+    toast(UI[state.lang].toast_success);
+    document.getElementById('enrollName').value = '';
+    document.getElementById('enrollPhone').value = '';
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){
+      loginModal.classList.remove('open');
+      courseModal.classList.remove('open');
+      enrollModal.classList.remove('open');
+    }
+  });
+
+  function toast(message, type){
+    var container = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast' + (type==='error' ? ' error' : '');
+    el.textContent = message;
+    container.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3700);
+  }
+
+  var overlay = document.getElementById('videoOverlay');
+  var video = document.getElementById('introVideo');
+  overlay.addEventListener('click', function(){
+    if(video.getAttribute('src')){
+      overlay.classList.add('hidden');
+      video.play();
+    } else {
+      toast(state.lang==='ru' ? 'Добавьте ссылку на видео в атрибут src тега <video>.' : 'Ба атрибути src-и теги <video> истиноди видеоро илова кунед.');
+    }
+  });
+  video.addEventListener('pause', function(){ overlay.classList.remove('hidden'); });
+
+  var typedOut = document.getElementById('typedOut');
+  var pIndex = 0, cIndex = 0, deleting = false;
+  function typeLoop(){
+    var phrases = typedPhrases[state.lang];
+    if(pIndex >= phrases.length) pIndex = 0;
+    var current = phrases[pIndex];
+    if(!deleting){
+      typedOut.textContent = current.slice(0, cIndex+1);
+      cIndex++;
+      if(cIndex === current.length){ deleting = true; setTimeout(typeLoop, 1600); return; }
+    } else {
+      typedOut.textContent = current.slice(0, Math.max(0,cIndex-1));
+      cIndex--;
+      if(cIndex <= 0){ deleting = false; pIndex = (pIndex+1) % phrases.length; }
+    }
+    setTimeout(typeLoop, deleting ? 28 : 46);
+  }
+  typeLoop();
+
+  function observeReveals(){
+    var reveals = document.querySelectorAll('.reveal:not(.in)');
+    if('IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if(entry.isIntersecting){ entry.target.classList.add('in'); io.unobserve(entry.target); }
+        });
+      }, {threshold:.12});
+      reveals.forEach(function(el){ io.observe(el); });
+    } else {
+      reveals.forEach(function(el){ el.classList.add('in'); });
+    }
+  }
+
+  function initCountUp(){
+    var els = document.querySelectorAll('.stat b[data-count]');
+    if(!('IntersectionObserver' in window)){
+      els.forEach(function(el){ el.textContent = el.getAttribute('data-count') + (el.getAttribute('data-suffix')||''); });
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) return;
+        var el = entry.target;
+        var target = parseInt(el.getAttribute('data-count'), 10);
+        var suffix = el.getAttribute('data-suffix') || '';
+        var start = 0;
+        var duration = 900;
+        var startTime = null;
+        function step(ts){
+          if(!startTime) startTime = ts;
+          var progress = Math.min((ts - startTime) / duration, 1);
+          var value = Math.floor(progress * target);
+          el.textContent = value + suffix;
+          if(progress < 1) requestAnimationFrame(step);
+          else el.textContent = target + suffix;
+        }
+        requestAnimationFrame(step);
+        io.unobserve(el);
+      });
+    }, {threshold:.5});
+    els.forEach(function(el){ io.observe(el); });
+  }
+
+  function initScrollProgress(){
+    var bar = document.getElementById('scrollBar');
+    var backBtn = document.getElementById('backToTop');
+    function onScroll(){
+      var scrollTop = window.scrollY || document.documentElement.scrollTop;
+      var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      var pct = height > 0 ? (scrollTop / height) * 100 : 0;
+      bar.style.width = pct + '%';
+      backBtn.classList.toggle('show', scrollTop > 500);
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    onScroll();
+    backBtn.addEventListener('click', function(){
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  }
+
+  applyStaticI18n();
+  renderFilters();
+  renderCourses();
+  renderProcess();
+  renderFormats();
+  renderTestimonials();
+  renderFaq();
+  renderEnrollOptions();
+  renderThemeIcon();
+  observeReveals();
+  initCountUp();
+  initScrollProgress();
+
+})();
+</script>
+
+</body>
+</html>

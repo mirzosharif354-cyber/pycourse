@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кабинет учителя — Pycourse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="logo"><span class="brk">&lt;</span>Pycourse<span class="brk2">/&gt;</span></div>
+    <nav class="side-nav">
+      <button class="nav-btn active" data-view="overview">📊 Обзор</button>
+      <button class="nav-btn" data-view="lessons">🎬 Видеоуроки</button>
+      <button class="nav-btn" data-view="tests">📝 Тесты</button>
+      <button class="nav-btn" data-view="tasks">🧩 Задачи</button>
+      <button class="nav-btn" data-view="students">🏆 Ученики и рейтинг</button>
+      <button class="nav-btn" data-view="chat">💬 Чат с учениками</button>
+      <button class="nav-btn" data-view="settings">⚙️ Настройки</button>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-row">
+        <div class="mini-avatar" id="avatarBox">Т</div>
+        <div>
+          <div class="sidebar-user-name" id="userName">—</div>
+          <div class="sidebar-user-role">Учитель</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn">Выйти</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <h1>Обзор</h1>
+      <p class="page-sub">Общая картина по курсу и ученикам.</p>
+      <div class="stat-row">
+        <div class="stat-box"><b id="statLessons">0</b><span>уроков с видео</span></div>
+        <div class="stat-box"><b id="statStudents">0</b><span>учеников</span></div>
+        <div class="stat-box"><b id="statAvg">0</b><span>средний балл рейтинга</span></div>
+      </div>
+      <div class="card">
+        <h3>Топ учеников</h3>
+        <p class="page-sub" style="margin-bottom:14px;">Полный рейтинг — на вкладке «Ученики и рейтинг».</p>
+        <table>
+          <thead><tr><th>#</th><th>Ученик</th><th>Уроков пройдено</th><th>Баллы</th></tr></thead>
+          <tbody id="topStudentsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- LESSONS / VIDEO -->
+    <section class="view" id="view-lessons">
+      <h1>Видеоуроки</h1>
+      <p class="page-sub">Добавьте видео с компьютера или вставьте ссылку — ученики увидят его в своём кабинете.</p>
+
+      <div class="card">
+        <h3>Новый урок</h3>
+        <form id="lessonForm">
+          <div class="field">
+            <label>Тема / раздел курса</label>
+            <input type="text" id="lTopic" list="topicOptions" placeholder="Например: Основы Python">
+            <datalist id="topicOptions"></datalist>
+          </div>
+          <div class="field">
+            <label>Название урока</label>
+            <input type="text" id="lTitle" placeholder="Урок 3. Циклы и условия" required>
+          </div>
+          <div class="field">
+            <label>Описание</label>
+            <textarea id="lDesc" placeholder="О чём этот урок"></textarea>
+          </div>
+          <div class="field">
+            <label>Источник видео</label>
+            <select id="lVideoType">
+              <option value="file">Загрузить с компьютера</option>
+              <option value="url">Ссылка (YouTube / прямая ссылка на файл)</option>
+            </select>
+          </div>
+          <div class="field" id="lFileField">
+            <label>Файл видео</label>
+            <input type="file" id="lFile" accept="video/*">
+            <p id="lFileName" style="margin:6px 0 0;font-size:12.5px;color:var(--text-500);"></p>
+          </div>
+          <div class="field hidden" id="lUrlField">
+            <label>Ссылка на видео</label>
+            <input type="url" id="lUrl" placeholder="https://...">
+          </div>
+          <button type="submit" class="btn btn-primary">Добавить урок</button>
+        </form>
+      </div>
+
+      <h3 style="margin:26px 0 12px;font-size:16px;">Все уроки</h3>
+      <div id="lessonsList"></div>
+    </section>
+
+    <!-- TESTS -->
+    <section class="view" id="view-tests">
+      <h1>Тесты</h1>
+      <p class="page-sub">Добавляйте вопросы с вариантами ответов к любому уроку.</p>
+      <div class="card">
+        <h3>Новый тест</h3>
+        <form id="testForm">
+          <div class="field">
+            <label>К какому уроку</label>
+            <select id="tLesson" required></select>
+          </div>
+          <div class="field">
+            <label>Вопрос</label>
+            <input type="text" id="tQuestion" placeholder="Например: что выведет print(2+2)?" required>
+          </div>
+          <div class="field"><label>Вариант 1</label><input type="text" id="tOpt0" required></div>
+          <div class="field"><label>Вариант 2</label><input type="text" id="tOpt1" required></div>
+          <div class="field"><label>Вариант 3</label><input type="text" id="tOpt2"></div>
+          <div class="field"><label>Вариант 4</label><input type="text" id="tOpt3"></div>
+          <div class="field">
+            <label>Правильный вариант</label>
+            <select id="tCorrect">
+              <option value="0">Вариант 1</option>
+              <option value="1">Вариант 2</option>
+              <option value="2">Вариант 3</option>
+              <option value="3">Вариант 4</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Добавить тест</button>
+        </form>
+      </div>
+      <h3 style="margin:26px 0 12px;font-size:16px;">Все тесты</h3>
+      <div id="testsList"></div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="view" id="view-tasks">
+      <h1>Задачи</h1>
+      <p class="page-sub">Практические задания, которые ученики решают самостоятельно.</p>
+      <div class="card">
+        <h3>Новая задача</h3>
+        <form id="taskForm">
+          <div class="field">
+            <label>К какому уроку</label>
+            <select id="taskLesson" required></select>
+          </div>
+          <div class="field">
+            <label>Название задачи</label>
+            <input type="text" id="taskTitle" placeholder="Задача 2" required>
+          </div>
+          <div class="field">
+            <label>Условие</label>
+            <textarea id="taskDesc" placeholder="Опишите, что нужно сделать" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Добавить задачу</button>
+        </form>
+      </div>
+      <h3 style="margin:26px 0 12px;font-size:16px;">Все задачи</h3>
+      <div id="tasksList"></div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="view" id="view-students">
+      <h1>Ученики и рейтинг</h1>
+      <p class="page-sub">Создавайте логины и пароли для учеников и следите за их прогрессом.</p>
+
+      <div class="card">
+        <h3>Новый ученик</h3>
+        <form id="pupilForm">
+          <div class="field">
+            <label>Имя ученика</label>
+            <input type="text" id="pName" placeholder="Как зовут ученика" required>
+          </div>
+          <div class="field">
+            <label>Логин (email)</label>
+            <input type="email" id="pEmail" placeholder="uchenik@pycourse.tj" required>
+          </div>
+          <div class="field">
+            <label>Пароль</label>
+            <input type="text" id="pPassword" placeholder="Придумайте пароль" required minlength="4">
+          </div>
+          <p class="form-error" id="pupilError"></p>
+          <button type="submit" class="btn btn-primary">Создать аккаунт ученика</button>
+        </form>
+      </div>
+
+      <h3 style="margin:26px 0 12px;font-size:16px;">Все ученики</h3>
+      <div class="card">
+        <table>
+          <thead><tr><th>Место</th><th>Ученик</th><th>Email</th><th>Уроков пройдено</th><th>Баллы</th><th></th></tr></thead>
+          <tbody id="studentsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section class="view" id="view-chat">
+      <h1>Чат с учениками</h1>
+      <p class="page-sub">Выберите ученика слева, чтобы ответить на сообщение.</p>
+      <div class="grid-2" style="align-items:start;">
+        <div class="card" style="padding:10px;">
+          <div id="threadList"></div>
+        </div>
+        <div class="card" id="chatPane" style="min-height:400px;display:flex;flex-direction:column;">
+          <div class="chat-empty" id="chatPlaceholder">Выберите ученика, чтобы открыть переписку.</div>
+          <div id="chatActive" class="hidden" style="display:flex;flex-direction:column;flex:1;">
+            <h3 id="chatWithName" style="margin-bottom:12px;"></h3>
+            <div class="chat-log" id="adminChatLog" style="max-height:340px;"></div>
+            <form class="chat-input-row" id="adminChatForm">
+              <input type="text" id="adminChatInput" placeholder="Ваш ответ...">
+              <button class="btn btn-primary" type="submit">Отправить</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <h1>Настройки</h1>
+      <p class="page-sub">Здесь можно изменить своё имя, логин (email) и пароль.</p>
+      <div class="card" style="max-width:440px;">
+        <form id="settingsForm">
+          <div class="field">
+            <label>Имя</label>
+            <input type="text" id="setName" required>
+          </div>
+          <div class="field">
+            <label>Email (логин)</label>
+            <input type="email" id="setEmail" required>
+          </div>
+          <div class="field">
+            <label>Новый пароль (необязательно)</label>
+            <input type="text" id="setNewPassword" placeholder="Оставь пустым, если не хочешь менять">
+          </div>
+          <div class="field">
+            <label>Текущий пароль (для подтверждения)</label>
+            <input type="password" id="setCurrentPassword" required>
+          </div>
+          <p class="form-error" id="settingsError"></p>
+          <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="api.js"></script>
+<script>
+(function(){
+  var currentLessons = []; // кэш последнего списка уроков (для селектов и группировки)
+
+  function toast(msg){
+    var c = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3700);
+  }
+
+  function fail(err){
+    toast(err.message || 'Ошибка запроса к серверу');
+  }
+
+  PycourseAPI.me().then(function(user){
+    if(!user || user.role !== 'admin'){
+      window.location.href = 'index.html';
+      return;
+    }
+    initPage(user);
+  }).catch(function(){
+    window.location.href = 'index.html';
+  });
+
+  function initPage(user){
+    document.getElementById('userName').textContent = user.name;
+    document.getElementById('avatarBox').textContent = user.name.charAt(0).toUpperCase();
+    document.getElementById('avatarBox').style.background = user.avatarColor || '#eab454';
+
+    document.getElementById('logoutBtn').addEventListener('click', function(){
+      PycourseAPI.logout().then(function(){ window.location.href = 'index.html'; });
+    });
+
+    /* ---------- navigation ---------- */
+    var navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        navButtons.forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+        document.getElementById('view-' + btn.getAttribute('data-view')).classList.add('active');
+        if(btn.getAttribute('data-view') === 'settings') fillSettingsForm();
+        renderAll();
+      });
+    });
+
+    /* ---------- settings ---------- */
+    function fillSettingsForm(){
+      document.getElementById('setName').value = user.name;
+      document.getElementById('setEmail').value = user.email;
+      document.getElementById('setNewPassword').value = '';
+      document.getElementById('setCurrentPassword').value = '';
+      document.getElementById('settingsError').textContent = '';
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var name = document.getElementById('setName').value.trim();
+      var email = document.getElementById('setEmail').value.trim();
+      var newPassword = document.getElementById('setNewPassword').value;
+      var currentPassword = document.getElementById('setCurrentPassword').value;
+      var errEl = document.getElementById('settingsError');
+      errEl.textContent = '';
+
+      PycourseAPI.updateProfile(currentPassword, { name: name, email: email, password: newPassword || undefined })
+        .then(function(updated){
+          user = updated;
+          document.getElementById('userName').textContent = user.name;
+          document.getElementById('avatarBox').textContent = user.name.charAt(0).toUpperCase();
+          toast('Данные профиля обновлены');
+          fillSettingsForm();
+        })
+        .catch(function(err){ errEl.textContent = err.message || 'Не удалось сохранить изменения'; });
+    });
+
+    /* ---------- lessons ---------- */
+    var videoTypeSel = document.getElementById('lVideoType');
+    videoTypeSel.addEventListener('change', function(){
+      document.getElementById('lFileField').classList.toggle('hidden', videoTypeSel.value !== 'file');
+      document.getElementById('lUrlField').classList.toggle('hidden', videoTypeSel.value !== 'url');
+    });
+    document.getElementById('lFile').addEventListener('change', function(){
+      var f = this.files && this.files[0];
+      var info = document.getElementById('lFileName');
+      if(!f){ info.textContent = ''; return; }
+      var mb = (f.size / (1024*1024)).toFixed(1);
+      info.textContent = 'Выбрано: ' + f.name + ' (' + mb + ' МБ)';
+    });
+
+    function fillLessonSelects(){
+      var html = currentLessons.map(function(l){
+        return '<option value="'+l.id+'">'+l.title+'</option>';
+      }).join('');
+      document.getElementById('tLesson').innerHTML = html;
+      document.getElementById('taskLesson').innerHTML = html;
+    }
+
+    function renderOverview(pupils){
+      document.getElementById('statLessons').textContent = currentLessons.length;
+      document.getElementById('statStudents').textContent = pupils.length;
+      var avg = pupils.length ? Math.round(pupils.reduce(function(s,p){ return s+(p.points||0); },0) / pupils.length) : 0;
+      document.getElementById('statAvg').textContent = avg;
+      document.getElementById('topStudentsBody').innerHTML = pupils.slice(0,5).map(function(p,i){
+        return '<tr><td>'+(i+1)+'</td><td>'+p.name+'</td><td>'+(p.completedCount||0)+'</td><td>'+(p.points||0)+'</td></tr>';
+      }).join('') || '<tr><td colspan="4" style="color:var(--text-500);">Пока нет учеников</td></tr>';
+    }
+
+    function renderLessons(){
+      var list = document.getElementById('lessonsList');
+      PycourseAPI.listTopics().then(function(topics){
+        document.getElementById('topicOptions').innerHTML = topics.map(function(t){
+          return '<option value="'+t+'">';
+        }).join('');
+      });
+      if(!currentLessons.length){
+        list.innerHTML = '<div class="empty-state">Уроков пока нет. Добавьте первый выше.</div>';
+        return;
+      }
+      var groups = {};
+      var order = [];
+      currentLessons.forEach(function(l){
+        var topic = l.topic || 'Без темы';
+        if(!groups[topic]){ groups[topic] = []; order.push(topic); }
+        groups[topic].push(l);
+      });
+      list.innerHTML = order.map(function(topic){
+        var rows = groups[topic].map(function(l, i){
+          return '<div class="lesson-row">'+
+            '<div class="num">'+(i+1)+'</div>'+
+            '<div class="info"><h4>'+l.title+'</h4><p>'+(l.desc||'')+' · видео: '+(l.videoType==='file'?'файл':(l.videoUrl?'ссылка':'не добавлено'))+'</p></div>'+
+            '<button class="btn btn-danger btn-sm" data-id="'+l.id+'">Удалить</button>'+
+          '</div>';
+        }).join('');
+        return '<h4 style="margin:18px 0 8px;color:var(--gold-400);font-size:14px;">'+topic+'</h4>'+rows;
+      }).join('');
+      list.querySelectorAll('button[data-id]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          if(confirm('Удалить урок и связанные тесты/задачи?')){
+            PycourseAPI.deleteLesson(btn.getAttribute('data-id')).then(function(){
+              toast('Урок удалён');
+              renderAll();
+            }).catch(fail);
+          }
+        });
+      });
+    }
+
+    document.getElementById('lessonForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var title = document.getElementById('lTitle').value.trim();
+      var desc = document.getElementById('lDesc').value.trim();
+      var type = videoTypeSel.value;
+      var url = document.getElementById('lUrl').value.trim();
+      var fileInput = document.getElementById('lFile');
+      var topic = document.getElementById('lTopic').value.trim();
+      var submitBtn = e.target.querySelector('button[type="submit"]');
+
+      var promise;
+      if(type === 'file'){
+        if(!fileInput.files || !fileInput.files[0]){
+          toast('Выберите файл видео');
+          return;
+        }
+        promise = PycourseAPI.addLessonFile(title, desc, topic, fileInput.files[0]);
+      } else {
+        promise = PycourseAPI.addLessonUrl(title, desc, topic, url);
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Загрузка...';
+      promise.then(function(){
+        e.target.reset();
+        document.getElementById('lFileName').textContent = '';
+        document.getElementById('lFileField').classList.remove('hidden');
+        document.getElementById('lUrlField').classList.add('hidden');
+        toast('Урок добавлен');
+        renderAll();
+      }).catch(fail).finally(function(){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Добавить урок';
+      });
+    });
+
+    /* ---------- tests ---------- */
+    function renderTests(){
+      var list = document.getElementById('testsList');
+      var byId = {};
+      currentLessons.forEach(function(l){ byId[l.id] = l.title; });
+      PycourseAPI.listTests().then(function(tests){
+        if(!tests.length){
+          list.innerHTML = '<div class="empty-state">Тестов пока нет.</div>';
+          return;
+        }
+        list.innerHTML = tests.map(function(t){
+          return '<div class="card"><p style="color:var(--text-500);font-size:12.5px;margin:0 0 6px;">'+(byId[t.lessonId]||'—')+'</p>'+
+            '<h3 style="margin-bottom:10px;">'+t.question+'</h3>'+
+            '<ul style="margin-bottom:10px;">'+t.options.filter(Boolean).map(function(o,i){
+              return '<li style="padding:4px 0;color:'+(i===t.correct?'var(--mint-400)':'var(--text-300)')+';font-size:14px;">'+(i===t.correct?'✓ ':'· ')+o+'</li>';
+            }).join('')+'</ul>'+
+            '<button class="btn btn-danger btn-sm" data-id="'+t.id+'">Удалить</button></div>';
+        }).join('');
+        list.querySelectorAll('button[data-id]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            PycourseAPI.deleteTest(btn.getAttribute('data-id')).then(function(){
+              toast('Тест удалён');
+              renderAll();
+            }).catch(fail);
+          });
+        });
+      }).catch(fail);
+    }
+
+    document.getElementById('testForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var lessonId = document.getElementById('tLesson').value;
+      var question = document.getElementById('tQuestion').value.trim();
+      var options = [
+        document.getElementById('tOpt0').value.trim(),
+        document.getElementById('tOpt1').value.trim(),
+        document.getElementById('tOpt2').value.trim(),
+        document.getElementById('tOpt3').value.trim()
+      ];
+      var correct = parseInt(document.getElementById('tCorrect').value, 10);
+      if(!lessonId){ toast('Сначала добавьте хотя бы один урок'); return; }
+      PycourseAPI.addTest(lessonId, question, options, correct).then(function(){
+        e.target.reset();
+        toast('Тест добавлен');
+        renderAll();
+      }).catch(fail);
+    });
+
+    /* ---------- tasks ---------- */
+    function renderTasks(){
+      var list = document.getElementById('tasksList');
+      var byId = {};
+      currentLessons.forEach(function(l){ byId[l.id] = l.title; });
+      PycourseAPI.listTasks().then(function(tasks){
+        if(!tasks.length){
+          list.innerHTML = '<div class="empty-state">Задач пока нет.</div>';
+          return;
+        }
+        list.innerHTML = tasks.map(function(t){
+          return '<div class="card"><p style="color:var(--text-500);font-size:12.5px;margin:0 0 6px;">'+(byId[t.lessonId]||'—')+'</p>'+
+            '<h3 style="margin-bottom:6px;">'+t.title+'</h3><p style="margin:0 0 10px;color:var(--text-300);">'+t.desc+'</p>'+
+            '<button class="btn btn-danger btn-sm" data-id="'+t.id+'">Удалить</button></div>';
+        }).join('');
+        list.querySelectorAll('button[data-id]').forEach(function(btn){
+          btn.addEventListener('click', function(){
+            PycourseAPI.deleteTask(btn.getAttribute('data-id')).then(function(){
+              toast('Задача удалена');
+              renderAll();
+            }).catch(fail);
+          });
+        });
+      }).catch(fail);
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var lessonId = document.getElementById('taskLesson').value;
+      var title = document.getElementById('taskTitle').value.trim();
+      var desc = document.getElementById('taskDesc').value.trim();
+      if(!lessonId){ toast('Сначала добавьте хотя бы один урок'); return; }
+      PycourseAPI.addTask(lessonId, title, desc).then(function(){
+        e.target.reset();
+        toast('Задача добавлена');
+        renderAll();
+      }).catch(fail);
+    });
+
+    /* ---------- students ---------- */
+    document.getElementById('pupilForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var name = document.getElementById('pName').value.trim();
+      var email = document.getElementById('pEmail').value.trim();
+      var pass = document.getElementById('pPassword').value;
+      var errEl = document.getElementById('pupilError');
+      errEl.textContent = '';
+      PycourseAPI.createStudent(name, email, pass).then(function(){
+        e.target.reset();
+        toast('Ученик создан: ' + email + ' / ' + pass);
+        renderAll();
+      }).catch(function(err){
+        errEl.textContent = err.message || 'Не удалось создать ученика';
+      });
+    });
+
+    function renderStudents(pupils){
+      var body = document.getElementById('studentsBody');
+      if(!pupils.length){
+        body.innerHTML = '<tr><td colspan="6" style="color:var(--text-500);">Пока нет ни одного ученика — создайте выше.</td></tr>';
+        return;
+      }
+      body.innerHTML = pupils.map(function(p, i){
+        var badgeClass = i===0?'gold':(i===1?'silver':(i===2?'bronze':''));
+        return '<tr><td><span class="rank-badge '+badgeClass+'">'+(i+1)+'</span></td><td>'+p.name+'</td><td>'+p.email+'</td><td>'+(p.completedCount||0)+'</td><td>'+(p.points||0)+'</td>'+
+          '<td style="white-space:nowrap;">'+
+            '<button class="btn btn-ghost btn-sm" data-reset="'+p.id+'">Сбросить пароль</button> '+
+            '<button class="btn btn-danger btn-sm" data-del="'+p.id+'">Удалить</button>'+
+          '</td></tr>';
+      }).join('');
+      body.querySelectorAll('button[data-reset]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var id = btn.getAttribute('data-reset');
+          var newPass = prompt('Новый пароль для этого ученика:');
+          if(!newPass) return;
+          PycourseAPI.resetStudentPassword(id, newPass).then(function(){
+            toast('Пароль обновлён: ' + newPass);
+          }).catch(fail);
+        });
+      });
+      body.querySelectorAll('button[data-del]').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          var id = btn.getAttribute('data-del');
+          if(confirm('Удалить этого ученика?')){
+            PycourseAPI.deleteStudent(id).then(function(){
+              toast('Ученик удалён');
+              renderAll();
+            }).catch(fail);
+          }
+        });
+      });
+    }
+
+    /* ---------- chat ---------- */
+    var activeThreadId = null;
+    function renderThreads(){
+      var list = document.getElementById('threadList');
+      PycourseAPI.listThreads().then(function(threads){
+        if(!threads.length){
+          list.innerHTML = '<div class="empty-state" style="padding:24px;">Сообщений от учеников пока нет.</div>';
+          return;
+        }
+        list.innerHTML = threads.map(function(p){
+          var active = p.id === activeThreadId ? 'style="border-color:var(--mint-400);"' : '';
+          return '<div class="lesson-row" '+active+' data-id="'+p.id+'" data-name="'+p.name+'" style="cursor:pointer;margin-bottom:8px;">'+
+            '<div class="num">'+p.name.charAt(0).toUpperCase()+'</div>'+
+            '<div class="info"><h4>'+p.name+'</h4><p>'+p.email+'</p></div></div>';
+        }).join('');
+        list.querySelectorAll('[data-id]').forEach(function(row){
+          row.addEventListener('click', function(){
+            activeThreadId = parseInt(row.getAttribute('data-id'), 10);
+            openThread(activeThreadId, row.getAttribute('data-name'));
+            renderThreads();
+          });
+        });
+      }).catch(fail);
+    }
+
+    function openThread(id, name){
+      document.getElementById('chatPlaceholder').classList.add('hidden');
+      document.getElementById('chatActive').classList.remove('hidden');
+      document.getElementById('chatWithName').textContent = name;
+      renderAdminChatLog(id);
+    }
+
+    function renderAdminChatLog(id){
+      PycourseAPI.getAdminChat(id).then(function(msgs){
+        var log = document.getElementById('adminChatLog');
+        log.innerHTML = msgs.map(function(m){
+          var mine = m.sender === 'teacher';
+          return '<div class="msg '+(mine?'me':'them')+'">'+m.text+'<span class="meta">'+new Date(m.time).toLocaleString('ru-RU')+'</span></div>';
+        }).join('') || '<div class="chat-empty">Переписки пока нет.</div>';
+        log.scrollTop = log.scrollHeight;
+      }).catch(fail);
+    }
+
+    document.getElementById('adminChatForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!activeThreadId) return;
+      var input = document.getElementById('adminChatInput');
+      var text = input.value.trim();
+      if(!text) return;
+      PycourseAPI.sendAdminChat(activeThreadId, text).then(function(){
+        input.value = '';
+        renderAdminChatLog(activeThreadId);
+      }).catch(fail);
+    });
+
+    /* ---------- render all ---------- */
+    function renderAll(){
+      Promise.all([PycourseAPI.listLessons(), PycourseAPI.listStudents()]).then(function(results){
+        currentLessons = results[0];
+        var pupils = results[1];
+        fillLessonSelects();
+        renderOverview(pupils);
+        renderLessons();
+        renderTests();
+        renderTasks();
+        renderStudents(pupils);
+        renderThreads();
+      }).catch(fail);
+    }
+
+    renderAll();
+  }
+})();
+</script>
+</body>
+</html>

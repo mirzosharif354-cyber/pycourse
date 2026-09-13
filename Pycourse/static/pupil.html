@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кабинет ученика — Pycourse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js" defer></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="logo"><span class="brk">&lt;</span>Pycourse<span class="brk2">/&gt;</span></div>
+    <nav class="side-nav">
+      <button class="nav-btn active" data-view="lessons">🎬 Мои уроки</button>
+      <button class="nav-btn" data-view="rating">🏆 Мой рейтинг</button>
+      <button class="nav-btn" data-view="settings">⚙️ Настройки</button>
+      <button class="nav-btn" id="goChat">💬 Чат и ИИ-помощник</button>
+    </nav>
+    <div class="sidebar-user">
+      <div class="sidebar-user-row">
+        <div class="mini-avatar" id="avatarBox">У</div>
+        <div>
+          <div class="sidebar-user-name" id="userName">—</div>
+          <div class="sidebar-user-role" id="userRankLabel">Ученик</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm btn-block" id="logoutBtn">Выйти</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- LESSON LIST -->
+    <section class="view active" id="view-lessons">
+      <h1>Мои уроки</h1>
+      <p class="page-sub">Проходи уроки по порядку: видео → тест → задача. Следующий урок откроется, когда пройдёшь текущий.</p>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+      <div id="lessonsList"></div>
+    </section>
+
+    <!-- LESSON DETAIL -->
+    <section class="view" id="view-detail">
+      <button class="btn btn-ghost btn-sm" id="backToLessons" style="margin-bottom:18px;">← Ко всем урокам</button>
+      <h1 id="detailTitle">Урок</h1>
+      <p class="page-sub" id="detailDesc"></p>
+
+      <div class="video-wrap" id="videoWrap">
+        <div class="video-empty" id="videoEmpty">Видео к этому уроку ещё не добавлено учителем.</div>
+        <video id="lessonVideo" controls class="hidden"></video>
+      </div>
+      <button class="btn btn-primary" id="markDoneBtn">Отметить урок пройденным (+10 баллов)</button>
+      <button class="btn btn-ghost hidden" id="nextLessonBtn" style="margin-left:8px;">Следующий урок →</button>
+
+      <div id="gateNotice" class="empty-state hidden" style="margin-top:26px;">Сначала досмотри видео до конца — тест и задачи откроются автоматически.</div>
+
+      <div id="gatedContent" class="hidden">
+        <h3 style="margin:30px 0 14px;font-size:17px;">Тест по уроку</h3>
+        <div id="detailTests"></div>
+
+        <h3 style="margin:30px 0 14px;font-size:17px;">Задачи</h3>
+        <div id="detailTasks"></div>
+      </div>
+    </section>
+
+    <!-- RATING -->
+    <section class="view" id="view-rating">
+      <h1>Мой рейтинг</h1>
+      <p class="page-sub">Место среди всех учеников платформы, по набранным баллам.</p>
+      <div class="stat-row">
+        <div class="stat-box"><b id="myRank">—</b><span>твоё место</span></div>
+        <div class="stat-box"><b id="myPoints">0</b><span>баллов</span></div>
+        <div class="stat-box"><b id="myDone">0</b><span>уроков пройдено</span></div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Место</th><th>Ученик</th><th>Баллы</th></tr></thead>
+          <tbody id="ratingBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="view-settings">
+      <h1>Настройки</h1>
+      <p class="page-sub">Здесь можно изменить своё имя, логин (email) и пароль.</p>
+      <div class="card" style="max-width:440px;">
+        <form id="settingsForm">
+          <div class="field">
+            <label>Имя</label>
+            <input type="text" id="setName" required>
+          </div>
+          <div class="field">
+            <label>Email (логин)</label>
+            <input type="email" id="setEmail" required>
+          </div>
+          <div class="field">
+            <label>Новый пароль (необязательно)</label>
+            <input type="text" id="setNewPassword" placeholder="Оставь пустым, если не хочешь менять">
+          </div>
+          <div class="field">
+            <label>Текущий пароль (для подтверждения)</label>
+            <input type="password" id="setCurrentPassword" required>
+          </div>
+          <p class="form-error" id="settingsError"></p>
+          <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="api.js"></script>
+<script>
+(function(){
+  var user = null;
+  var currentLessonId = null;
+  var allLessons = [];
+  var pyodidePromise = null;
+
+  function toast(msg){
+    var c = document.getElementById('toastContainer');
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(function(){ el.remove(); }, 3700);
+  }
+  function fail(err){ toast(err.message || 'Ошибка запроса к серверу'); }
+
+  PycourseAPI.me().then(function(u){
+    if(!u || u.role !== 'pupil'){
+      window.location.href = 'index.html';
+      return;
+    }
+    user = u;
+    initPage();
+  }).catch(function(){
+    window.location.href = 'index.html';
+  });
+
+  function initPage(){
+    document.getElementById('userName').textContent = user.name;
+    document.getElementById('avatarBox').textContent = user.name.charAt(0).toUpperCase();
+    document.getElementById('avatarBox').style.background = user.avatarColor || '#34d399';
+
+    document.getElementById('logoutBtn').addEventListener('click', function(){
+      PycourseAPI.logout().then(function(){ window.location.href = 'index.html'; });
+    });
+    document.getElementById('goChat').addEventListener('click', function(){
+      window.location.href = 'chat.html';
+    });
+
+    /* ---------- navigation ---------- */
+    var navButtons = document.querySelectorAll('.nav-btn[data-view]');
+    function showView(name){
+      document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+      document.getElementById('view-' + name).classList.add('active');
+      navButtons.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-view') === name); });
+    }
+    navButtons.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        showView(btn.getAttribute('data-view'));
+        if(btn.getAttribute('data-view') === 'lessons') renderLessons();
+        if(btn.getAttribute('data-view') === 'rating') renderRating();
+        if(btn.getAttribute('data-view') === 'settings') fillSettingsForm();
+      });
+    });
+    document.getElementById('backToLessons').addEventListener('click', function(){ showView('lessons'); renderLessons(); });
+
+    /* ---------- блокировка уроков по порядку ---------- */
+    function withLocks(lessons){
+      var allowed = true;
+      return lessons.map(function(l){
+        var withLock = Object.assign({}, l, { locked: !allowed });
+        allowed = allowed && !!l.completed;
+        return withLock;
+      });
+    }
+
+    /* ---------- lessons list ---------- */
+    function renderLessons(){
+      var list = document.getElementById('lessonsList');
+      PycourseAPI.listLessons().then(function(lessons){
+        allLessons = withLocks(lessons);
+
+        var doneCount = allLessons.filter(function(l){ return l.completed; }).length;
+        var pct = allLessons.length ? Math.round((doneCount / allLessons.length) * 100) : 0;
+        document.getElementById('progressFill').style.width = pct + '%';
+
+        if(!allLessons.length){
+          list.innerHTML = '<div class="empty-state">Учитель пока не добавил уроки. Загляни позже.</div>';
+          return;
+        }
+        var groups = {};
+        var order = [];
+        allLessons.forEach(function(l){
+          var topic = l.topic || 'Без темы';
+          if(!groups[topic]){ groups[topic] = []; order.push(topic); }
+          groups[topic].push(l);
+        });
+        list.innerHTML = order.map(function(topic){
+          var rows = groups[topic].map(function(l, i){
+            var isDone = !!l.completed;
+            var isLocked = !!l.locked;
+            var rightBit = isDone
+              ? '<span class="check-pill">✓ пройден</span>'
+              : (isLocked ? '<span class="locked-pill">🔒 заблокирован</span>' : '<button class="btn btn-ghost btn-sm">Открыть</button>');
+            return '<div class="lesson-row'+(isDone?' done':'')+(isLocked?' locked':'')+'" data-id="'+l.id+'" style="cursor:'+(isLocked?'not-allowed':'pointer')+';">'+
+              '<div class="num">'+(i+1)+'</div>'+
+              '<div class="info"><h4>'+l.title+'</h4><p>'+(l.desc||'')+'</p></div>'+
+              rightBit+
+            '</div>';
+          }).join('');
+          return '<h4 style="margin:18px 0 8px;color:var(--gold-400);font-size:14px;">'+topic+'</h4>'+rows;
+        }).join('');
+        list.querySelectorAll('.lesson-row').forEach(function(row){
+          row.addEventListener('click', function(){
+            var id = row.getAttribute('data-id');
+            var lesson = allLessons.filter(function(l){ return String(l.id) === String(id); })[0];
+            if(lesson && lesson.locked){
+              toast('Сначала пройди предыдущий урок');
+              return;
+            }
+            openLesson(id);
+          });
+        });
+      }).catch(fail);
+    }
+
+    /* ---------- lesson detail ---------- */
+    function openLesson(id){
+      PycourseAPI.listLessons().then(function(lessons){
+        allLessons = withLocks(lessons);
+        var lesson = allLessons.filter(function(l){ return String(l.id) === String(id); })[0];
+        if(!lesson) return;
+        if(lesson.locked){
+          toast('Сначала пройди предыдущий урок');
+          showView('lessons');
+          renderLessons();
+          return;
+        }
+        currentLessonId = id;
+        showView('detail');
+        document.getElementById('detailTitle').textContent = lesson.title;
+        document.getElementById('detailDesc').textContent = lesson.desc || '';
+
+        var videoEl = document.getElementById('lessonVideo');
+        var emptyEl = document.getElementById('videoEmpty');
+        videoEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+        videoEl.pause();
+        videoEl.removeAttribute('src');
+        videoEl.onended = null;
+
+        if(lesson.videoUrl){
+          videoEl.src = lesson.videoUrl;
+          videoEl.classList.remove('hidden');
+          emptyEl.classList.add('hidden');
+          videoEl.onended = function(){
+            PycourseAPI.watchLesson(lesson.id).then(function(){
+              toast('Видео просмотрено — тест и задачи открыты!');
+              lesson.watched = true;
+              revealGatedContent(lesson);
+            }).catch(fail);
+          };
+        }
+
+        var markBtn = document.getElementById('markDoneBtn');
+        var nextBtn = document.getElementById('nextLessonBtn');
+        markBtn.disabled = !!lesson.completed || !lesson.watched;
+        markBtn.textContent = lesson.completed ? 'Урок уже пройден ✓' : (lesson.watched ? 'Отметить урок пройденным (+10 баллов)' : 'Сначала досмотри видео');
+
+        var nextLesson = allLessons[allLessons.indexOf(lesson) + 1];
+        if(lesson.completed && nextLesson && !nextLesson.locked){
+          nextBtn.classList.remove('hidden');
+          nextBtn.onclick = function(){ openLesson(nextLesson.id); };
+        } else {
+          nextBtn.classList.add('hidden');
+        }
+
+        if(lesson.watched){
+          revealGatedContent(lesson);
+        } else {
+          document.getElementById('gateNotice').classList.remove('hidden');
+          document.getElementById('gatedContent').classList.add('hidden');
+        }
+      }).catch(fail);
+    }
+
+    function revealGatedContent(lesson){
+      document.getElementById('gateNotice').classList.add('hidden');
+      document.getElementById('gatedContent').classList.remove('hidden');
+      var markBtn = document.getElementById('markDoneBtn');
+      if(!lesson.completed){
+        markBtn.disabled = false;
+        markBtn.textContent = 'Отметить урок пройденным (+10 баллов)';
+      }
+      renderDetailTests(lesson.id);
+      renderDetailTasks(lesson.id);
+    }
+
+    document.getElementById('markDoneBtn').addEventListener('click', function(){
+      if(!currentLessonId) return;
+      PycourseAPI.completeLesson(currentLessonId).then(function(){
+        toast('Урок отмечен пройденным! +10 баллов');
+        openLesson(currentLessonId);
+      }).catch(fail);
+    });
+
+    /* ---------- тесты с пересдачей при ошибке ---------- */
+    function renderDetailTests(lessonId){
+      var box = document.getElementById('detailTests');
+      PycourseAPI.listTests(lessonId).then(function(tests){
+        if(!tests.length){
+          box.innerHTML = '<div class="empty-state">К этому уроку пока нет теста.</div>';
+          return;
+        }
+        box.innerHTML = tests.map(function(t){
+          var answered = !!t.answered;
+          return '<div class="card" data-test="'+t.id+'">'+
+            '<h3 style="margin-bottom:12px;">'+t.question+'</h3>'+
+            '<div class="options">'+t.options.filter(Boolean).map(function(o,i){
+              return '<div class="test-option'+(answered && i===t.correct ? ' correct' : '')+'" data-i="'+i+'">'+
+                '<input type="radio" name="opt_'+t.id+'" '+(answered?'disabled':'')+'><span>'+o+'</span></div>';
+            }).join('')+'</div>'+
+            (answered
+              ? '<p style="margin-top:10px;color:var(--mint-400);font-size:13.5px;">Верно! Баллы уже начислены.</p>'
+              : '<button class="btn btn-primary btn-sm submit-test" style="margin-top:12px;">Ответить</button>')+
+          '</div>';
+        }).join('');
+
+        box.querySelectorAll('.card').forEach(function(card){
+          var testId = card.getAttribute('data-test');
+          var selected = null;
+          var options = card.querySelectorAll('.test-option');
+          options.forEach(function(opt){
+            opt.addEventListener('click', function(){
+              if(opt.querySelector('input').disabled) return;
+              options.forEach(function(o){ o.querySelector('input').checked = false; });
+              opt.querySelector('input').checked = true;
+              selected = parseInt(opt.getAttribute('data-i'), 10);
+            });
+          });
+          var submitBtn = card.querySelector('.submit-test');
+          if(submitBtn){
+            submitBtn.addEventListener('click', function(){
+              if(selected === null){ toast('Выбери вариант ответа'); return; }
+              submitBtn.disabled = true;
+              PycourseAPI.submitTest(testId, selected).then(function(res){
+                if(res.correct){
+                  toast('Правильно! +15 баллов');
+                  renderDetailTests(currentLessonId);
+                } else {
+                  toast('Неверно! Попробуй ещё раз.');
+                  options.forEach(function(o){
+                    var i = parseInt(o.getAttribute('data-i'), 10);
+                    o.classList.remove('correct','wrong');
+                    if(i === selected) o.classList.add('wrong');
+                    if(i === res.correctIndex) o.classList.add('correct');
+                  });
+                  var retryBtn = document.createElement('button');
+                  retryBtn.className = 'btn btn-ghost btn-sm';
+                  retryBtn.style.marginTop = '10px';
+                  retryBtn.style.marginLeft = '8px';
+                  retryBtn.textContent = 'Попробовать снова';
+                  retryBtn.addEventListener('click', function(){ renderDetailTests(currentLessonId); });
+                  submitBtn.insertAdjacentElement('afterend', retryBtn);
+                  submitBtn.remove();
+                }
+              }).catch(function(err){ fail(err); submitBtn.disabled = false; });
+            });
+          }
+        });
+      }).catch(fail);
+    }
+
+    /* ---------- задачи: редактор кода в стиле VS Code ---------- */
+    var FUNCTION_HINTS = [
+      { re: /\bprint\s*\(/, label: 'print()', desc: 'выводит значение на экран' },
+      { re: /\binput\s*\(/, label: 'input()', desc: 'считывает строку, введённую пользователем' },
+      { re: /\blen\s*\(/, label: 'len()', desc: 'возвращает длину строки или списка' },
+      { re: /\brange\s*\(/, label: 'range()', desc: 'создаёт последовательность чисел' },
+      { re: /\bint\s*\(/, label: 'int()', desc: 'преобразует значение в целое число' },
+      { re: /\bfloat\s*\(/, label: 'float()', desc: 'преобразует значение в дробное число' },
+      { re: /\bstr\s*\(/, label: 'str()', desc: 'преобразует значение в строку' },
+      { re: /\blist\s*\(/, label: 'list()', desc: 'создаёт список' },
+      { re: /\bdict\s*\(/, label: 'dict()', desc: 'создаёт словарь' },
+      { re: /\bsum\s*\(/, label: 'sum()', desc: 'считает сумму чисел' },
+      { re: /\bmax\s*\(/, label: 'max()', desc: 'находит наибольшее значение' },
+      { re: /\bmin\s*\(/, label: 'min()', desc: 'находит наименьшее значение' },
+      { re: /\bsorted\s*\(/, label: 'sorted()', desc: 'сортирует список' },
+      { re: /\.append\s*\(/, label: '.append()', desc: 'добавляет элемент в конец списка' },
+      { re: /\bdef\s+\w+/, label: 'def', desc: 'определяет свою функцию' },
+      { re: /\breturn\b/, label: 'return', desc: 'возвращает значение из функции' },
+      { re: /\bfor\b.*\bin\b/, label: 'for ... in', desc: 'цикл — повторяет действия для каждого элемента' },
+      { re: /\bwhile\b/, label: 'while', desc: 'цикл — повторяет, пока условие истинно' },
+      { re: /\bif\b/, label: 'if', desc: 'условие — выполняет код, если условие верно' },
+      { re: /\belif\b/, label: 'elif', desc: 'ещё одно условие после if' },
+      { re: /\belse\b/, label: 'else', desc: 'выполняется, если условие(-я) не сработали' }
+    ];
+
+    function getPyodide(){
+      if(!pyodidePromise){
+        pyodidePromise = (typeof loadPyodide === 'function')
+          ? loadPyodide()
+          : Promise.reject(new Error('Среда Python ещё загружается — подожди пару секунд.'));
+      }
+      return pyodidePromise;
+    }
+
+    function renderDetailTasks(lessonId){
+      var box = document.getElementById('detailTasks');
+      PycourseAPI.listTasks(lessonId).then(function(tasks){
+        if(!tasks.length){
+          box.innerHTML = '<div class="empty-state">К этому уроку пока нет отдельных задач.</div>';
+          return;
+        }
+        box.innerHTML = tasks.map(function(t){
+          return '<div class="card">'+
+            '<h3 style="margin-bottom:6px;">'+t.title+'</h3>'+
+            '<p style="margin:0 0 4px;color:var(--text-300);">'+t.desc+'</p>'+
+            '<div class="code-editor" data-task="'+t.id+'">'+
+              '<div class="code-editor-bar">'+
+                '<span class="code-editor-dot" style="background:#ff5f56;"></span>'+
+                '<span class="code-editor-dot" style="background:#ffbd2e;"></span>'+
+                '<span class="code-editor-dot" style="background:#27c93f;"></span>'+
+                '<span class="code-editor-filename">task_'+t.id+'.py</span>'+
+              '</div>'+
+              '<textarea spellcheck="false" placeholder="# напиши решение здесь"></textarea>'+
+              '<div class="code-syntax muted">Проверка синтаксиса появится, когда начнёшь печатать</div>'+
+              '<div class="code-hints"><b>Подсказка:</b> начни печатать код — здесь появятся объяснения функций, которые ты используешь.</div>'+
+              '<div class="code-editor-actions">'+
+                '<button class="btn btn-primary btn-sm run-code">▶ Запустить код</button>'+
+                '<span style="font-size:12px;color:#7a7a7a;">Python выполняется прямо в браузере</span>'+
+              '</div>'+
+              '<div class="code-console muted">Вывод программы появится здесь после запуска.</div>'+
+            '</div>'+
+          '</div>';
+        }).join('');
+
+        box.querySelectorAll('.code-editor').forEach(function(editor){
+          var textarea = editor.querySelector('textarea');
+          var runBtn = editor.querySelector('.run-code');
+          var out = editor.querySelector('.code-console');
+          var syntaxEl = editor.querySelector('.code-syntax');
+          var hintsEl = editor.querySelector('.code-hints');
+          var debounceTimer = null;
+
+          textarea.addEventListener('keydown', function(e){
+            if(e.key === 'Tab'){
+              e.preventDefault();
+              var start = textarea.selectionStart, end = textarea.selectionEnd;
+              textarea.value = textarea.value.slice(0, start) + '    ' + textarea.value.slice(end);
+              textarea.selectionStart = textarea.selectionEnd = start + 4;
+            }
+          });
+
+          function updateHints(code){
+            var found = FUNCTION_HINTS.filter(function(h){ return h.re.test(code); });
+            if(!code.trim()){
+              hintsEl.innerHTML = '<b>Подсказка:</b> начни печатать код — здесь появятся объяснения функций, которые ты используешь.';
+              return;
+            }
+            if(!found.length){
+              hintsEl.innerHTML = '<b>Подсказка:</b> пока не вижу знакомых функций в коде — это не ошибка, просто не смогу подсказать по ним.';
+              return;
+            }
+            hintsEl.innerHTML = '<b>В твоём коде:</b> ' + found.map(function(h){
+              return '<b>'+h.label+'</b> — '+h.desc;
+            }).join(' · ');
+          }
+
+          function checkSyntax(code){
+            if(!code.trim()){
+              syntaxEl.className = 'code-syntax muted';
+              syntaxEl.textContent = 'Проверка синтаксиса появится, когда начнёшь печатать';
+              return;
+            }
+            getPyodide().then(function(pyodide){
+              try {
+                pyodide.globals.set('_src', code);
+                pyodide.runPython("compile(_src, '<code>', 'exec')");
+                syntaxEl.className = 'code-syntax ok';
+                syntaxEl.textContent = '✓ Синтаксис в порядке';
+              } catch(e){
+                syntaxEl.className = 'code-syntax err';
+                var msg = (e && e.message) ? e.message : String(e);
+                var short = msg.split('\n').slice(-2).join(' ').trim();
+                syntaxEl.textContent = '✗ Ошибка синтаксиса: ' + short;
+              }
+            }).catch(function(){
+              syntaxEl.className = 'code-syntax muted';
+              syntaxEl.textContent = 'Среда Python загружается...';
+            });
+          }
+
+          textarea.addEventListener('input', function(){
+            updateHints(textarea.value);
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function(){ checkSyntax(textarea.value); }, 700);
+          });
+
+          runBtn.addEventListener('click', function(){
+            var code = textarea.value;
+            out.className = 'code-console muted';
+            out.textContent = 'Запуск...';
+            runBtn.disabled = true;
+
+            getPyodide().then(function(pyodide){
+              var lines = [];
+              pyodide.setStdout({ batched: function(s){ lines.push(s); } });
+              pyodide.setStderr({ batched: function(s){ lines.push(s); } });
+              try {
+                pyodide.runPython(code);
+                out.className = 'code-console ok';
+                out.textContent = lines.join('\n') || '(программа не вывела ничего на экран)';
+              } catch(e){
+                out.className = 'code-console err';
+                var msg = (e && e.message) ? e.message : String(e);
+                var short = msg.split('\n').slice(-4).join('\n');
+                out.textContent = (lines.join('\n') + '\n' + short).trim();
+              }
+            }).catch(function(e){
+              out.className = 'code-console err';
+              out.textContent = 'Не удалось загрузить среду Python: ' + e.message;
+            }).finally(function(){
+              runBtn.disabled = false;
+            });
+          });
+        });
+      }).catch(fail);
+    }
+
+    /* ---------- rating ---------- */
+    function renderRating(){
+      PycourseAPI.getRating().then(function(data){
+        var pupils = data.pupils;
+        var rank = data.myRank;
+        var me = pupils.filter(function(p){ return p.id === user.id; })[0];
+        document.getElementById('myRank').textContent = rank ? ('#'+rank) : '—';
+        document.getElementById('myPoints').textContent = me ? (me.points||0) : 0;
+        document.getElementById('myDone').textContent = me ? (me.completedCount||0) : 0;
+        document.getElementById('userRankLabel').textContent = rank ? ('Место #'+rank+' в рейтинге') : 'Ученик';
+
+        document.getElementById('ratingBody').innerHTML = pupils.map(function(p, i){
+          var isMe = p.id === user.id;
+          var badgeClass = i===0?'gold':(i===1?'silver':(i===2?'bronze':''));
+          return '<tr style="'+(isMe?'background:rgba(52,211,153,.08);':'')+'"><td><span class="rank-badge '+badgeClass+'">'+(i+1)+'</span></td><td>'+p.name+(isMe?' (ты)':'')+'</td><td>'+(p.points||0)+'</td></tr>';
+        }).join('');
+      }).catch(fail);
+    }
+
+    /* ---------- settings ---------- */
+    function fillSettingsForm(){
+      document.getElementById('setName').value = user.name;
+      document.getElementById('setEmail').value = user.email;
+      document.getElementById('setNewPassword').value = '';
+      document.getElementById('setCurrentPassword').value = '';
+      document.getElementById('settingsError').textContent = '';
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var name = document.getElementById('setName').value.trim();
+      var email = document.getElementById('setEmail').value.trim();
+      var newPassword = document.getElementById('setNewPassword').value;
+      var currentPassword = document.getElementById('setCurrentPassword').value;
+      var errEl = document.getElementById('settingsError');
+      errEl.textContent = '';
+
+      PycourseAPI.updateProfile(currentPassword, { name: name, email: email, password: newPassword || undefined })
+        .then(function(updated){
+          user = updated;
+          document.getElementById('userName').textContent = user.name;
+          document.getElementById('avatarBox').textContent = user.name.charAt(0).toUpperCase();
+          toast('Данные профиля обновлены');
+          fillSettingsForm();
+        })
+        .catch(function(err){ errEl.textContent = err.message || 'Не удалось сохранить изменения'; });
+    });
+
+    renderLessons();
+    renderRating();
+  }
+})();
+</script>
+</body>
+</html>
